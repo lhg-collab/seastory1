@@ -50,11 +50,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _DistortAmp: 0.02
+    - _DistortAmp: 0.006
     - _QueueControl: 0
     - _QueueOffset: 0
     m_Colors:
-    - _DistortSpeed: {r: 0.1, g: 0, b: 0, a: 0}
+    - _DistortSpeed: {r: 0.03, g: 0, b: 0, a: 0}
     - _DistortTiling: {r: 1.4, g: 1, b: 0, a: 0}
   m_BuildTextureStacks: []
 --- !u!114 &4882337770979451110
