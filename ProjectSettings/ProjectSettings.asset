@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 26
-  productGUID: a8754d7cb638ad147b3cc46967cc5a33
+  productGUID: 0137f2092e8dc614ba4eb7b54f86d3e7
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +13,7 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
-  productName: seastory1
+  productName: 789789789
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -843,14 +843,14 @@ PlayerSettings:
   apiCompatibilityLevelPerPlatform: {}
   m_RenderingPath: 1
   m_MobileRenderingPath: 1
-  metroPackageName: seastory1
+  metroPackageName: 789789789
   metroPackageVersion: 
   metroCertificatePath: 
   metroCertificatePassword: 
   metroCertificateSubject: 
   metroCertificateIssuer: 
   metroCertificateNotAfter: 0000000000000000
-  metroApplicationDescription: seastory1
+  metroApplicationDescription: 789789789
   wsaImages: {}
   metroTileShortName: 
   metroTileShowName: 0
@@ -920,10 +920,10 @@ PlayerSettings:
   apiCompatibilityLevel: 6
   activeInputHandler: 0
   windowsGamepadBackendHint: 0
-  cloudProjectId: e9792cc7-2964-4f9d-9fef-19599ec55dcd
+  cloudProjectId: 03a58cf0-4bce-434b-aa6a-42d7336f6464
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: seastory1
+  projectName: 789789789
   organizationId: dktkaos
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
