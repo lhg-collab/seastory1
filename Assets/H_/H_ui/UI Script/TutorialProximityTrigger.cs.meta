@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Player/Scripts/Player/OxygenHealthTPC.cs.meta
+guid: 04b75a371d48e4043907cca803d545c0
+========
+guid: afa290543dcea914a85ca67c0281c699
+>>>>>>>> 수요일_테스트:Assets/Title&UI/UI Script/TutorialProximityTrigger.cs.meta
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
