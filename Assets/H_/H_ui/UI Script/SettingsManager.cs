@@ -9,7 +9,7 @@ public class SettingsManager : MonoBehaviour
     [Header("=== 설정창 === ")]
     public GameObject settingsPanel;
     public GameObject soundSettingsPanel;
-    public GameObject inventoryPanel; // ✅ 인벤토리 추가
+    public GameObject inventoryPanel; // 인벤토리(선택)
     public Button resumeButton;
     public Button restartButton;
     public Button settingsButton;
@@ -19,10 +19,6 @@ public class SettingsManager : MonoBehaviour
     public Slider volumeSlider;
     public Toggle muteToggle;
     public Button closeButton;
-
-    [Header("=== 기타 UI ===")]
-    public GameObject aimUI;    // 🎯 에임 (Crosshair)
-    public GameObject gatherUI; // (선택) 채집 게이지 같은 UI
 
     // ===== 자동 바인딩 옵션 =====
     [Header("=== 자동 바인딩 설정 ===")]
@@ -42,9 +38,6 @@ public class SettingsManager : MonoBehaviour
     public string[] volumeSliderNames = { "SliderVolume", "VolumeSlider" };
     public string[] muteToggleNames = { "ToggleMute", "MuteToggle" };
 
-    public string[] crosshairNames = { "CrosshairUI", "AimUI", "Crosshair" };
-    public string[] gatherUiNames = { "GatherUI", "GatherPanel", "GatherGauge" };
-
     bool isPaused = false;
     string currentSceneName;
 
@@ -53,46 +46,27 @@ public class SettingsManager : MonoBehaviour
     {
         if (autoBindOnAwake) AutoBindUI();
         WireUpListeners(); // (초기) 중복 제거 후 연결
-        EnsureEventSystem(); // 🔹 최소 1개의 EventSystem 보장
+        EnsureEventSystem(); // 최소 1개의 EventSystem 보장
     }
 
     void Start()
     {
         currentSceneName = SceneManager.GetActiveScene().name;
 
-        if (!aimUI) aimUI = FindByNames(crosshairNames)?.gameObject;
-        if (!gatherUI) gatherUI = FindByNames(gatherUiNames)?.gameObject;
-
-        if (aimUI) aimUI.SetActive(!isPaused);
-
         settingsPanel?.SetActive(false);
         soundSettingsPanel?.SetActive(false);
 
         LoadSettings();
-        HandleAimVisibility();
+        // (aim/gather 관련 가시성 제어 제거)
     }
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
             ToggleSettings();
-
-        HandleAimVisibility();
     }
 
     // ================== 핵심 동작 ==================
-    void HandleAimVisibility()
-    {
-        bool anyUIActive =
-            (settingsPanel && settingsPanel.activeSelf) ||
-            (soundSettingsPanel && soundSettingsPanel.activeSelf) ||
-            (inventoryPanel && inventoryPanel.activeSelf) ||
-            (gatherUI && gatherUI.activeSelf);
-
-        if (aimUI)
-            aimUI.SetActive(!anyUIActive);
-    }
-
     void ToggleSettings()
     {
         // 열기/닫기 전에 “현재 보이는 패널”로 다시 잡기 + 내부 버튼 재바인딩
@@ -122,17 +96,12 @@ public class SettingsManager : MonoBehaviour
             Cursor.visible = false;
             Debug.Log("[Settings] Close");
         }
-
-        HandleAimVisibility();
     }
 
     public void ResumeGame()
     {
-        // 버튼 클릭 소리
         if (AudioManager.instance != null)
-        {
             AudioManager.instance.PlayButtonClick();
-        }
 
         Debug.Log("[Settings] Resume clicked");
         isPaused = false;
@@ -141,32 +110,24 @@ public class SettingsManager : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-
-        HandleAimVisibility();
     }
 
     public void RestartGame()
     {
-        // 버튼 클릭 소리
         if (AudioManager.instance != null)
-        {
             AudioManager.instance.PlayButtonClick();
-        }
 
         Debug.Log("[Settings] Restart clicked");
         Time.timeScale = 1;
-        settingsPanel.gameObject.SetActive(false);
+        settingsPanel?.SetActive(false); // null-safe 보강
         isPaused = false;
         SceneManager.LoadScene(currentSceneName);
     }
 
     public void GoToMainMenu()
     {
-        // 버튼 클릭 소리
         if (AudioManager.instance != null)
-        {
             AudioManager.instance.PlayButtonClick();
-        }
 
         Debug.Log("[Settings] MainMenu clicked");
         Time.timeScale = 1;
@@ -175,11 +136,8 @@ public class SettingsManager : MonoBehaviour
 
     public void OpenSoundSettings()
     {
-        // 버튼 클릭 소리
         if (AudioManager.instance != null)
-        {
             AudioManager.instance.PlayButtonClick();
-        }
 
         // “현재 보이는 소리 패널”을 다시 찾아서 내부 UI 재바인딩
         soundSettingsPanel = FindTopmostPanel(soundPanelNames) ?? soundSettingsPanel;
@@ -190,8 +148,6 @@ public class SettingsManager : MonoBehaviour
         EnsureEventSystem();
         EnsurePanelClickable(soundSettingsPanel, bringToFront: true);
 
-        HandleAimVisibility();
-
         Debug.Log("[Settings] Sound panel open");
     }
 
@@ -199,28 +155,22 @@ public class SettingsManager : MonoBehaviour
     {
         Debug.Log("[Settings] Sound panel close clicked");
 
-        // 버튼 클릭 소리
         if (AudioManager.instance != null)
-        {
             AudioManager.instance.PlayButtonClick();
-        }
 
         soundSettingsPanel?.SetActive(false);
-        HandleAimVisibility();
     }
 
     public void ChangeVolume(float volume)
     {
         AudioListener.volume = volume;
         PlayerPrefs.SetFloat("Volume", volume);
-        // 디버그: Debug.Log($"[Settings] Volume: {volume}");
     }
 
     public void ChangeMute(bool isMuted)
     {
         AudioListener.pause = isMuted;
         PlayerPrefs.SetInt("Mute", isMuted ? 1 : 0);
-        // 디버그: Debug.Log($"[Settings] Mute: {isMuted}");
     }
 
     void LoadSettings()
@@ -256,14 +206,10 @@ public class SettingsManager : MonoBehaviour
         TryFindInPanel(ref closeButton, closeBtnNames, soundSettingsPanel);
         TryFindInPanel(ref volumeSlider, volumeSliderNames, soundSettingsPanel);
         TryFindInPanel(ref muteToggle, muteToggleNames, soundSettingsPanel);
-
-        if (!aimUI) aimUI = FindByNames(crosshairNames)?.gameObject;
-        if (!gatherUI) gatherUI = FindByNames(gatherUiNames)?.gameObject;
     }
 
     void WireUpListeners()
     {
-        // (초기) 한 번 바인딩 — 이후 열릴 때마다 Rebind* 가 다시 붙여줌
         RebindSettingsButtons(settingsPanel);
         RebindSoundButtons(soundSettingsPanel);
     }
@@ -271,7 +217,6 @@ public class SettingsManager : MonoBehaviour
     // ================== Rebind (가장 위 패널의 실제 버튼에 연결) ==================
     void RebindSettingsButtons(GameObject panel)
     {
-        // 패널이 바뀌었을 수 있으므로, 이름으로 다시 찾고 그 버튼들에 연결
         TryFindInPanel(ref resumeButton, resumeBtnNames, panel);
         TryFindInPanel(ref restartButton, restartBtnNames, panel);
         TryFindInPanel(ref settingsButton, settingsBtnNames, panel);
@@ -297,10 +242,8 @@ public class SettingsManager : MonoBehaviour
     // ================== Finder helpers ==================
     GameObject FindTopmostPanel(string[] names)
     {
-        // 이름이 일치하는 오브젝트들 중 “보이는 Canvas의 sortingOrder가 가장 높은 것” 선택
         GameObject best = null; int bestOrder = int.MinValue;
 
-        // 활성/비활성 + DDOL 포함해서 이름으로 모두 수집
         var candidates = names
             .SelectMany(n => Resources.FindObjectsOfTypeAll<Transform>()
                                       .Where(t => t && t.gameObject.scene.IsValid() &&
