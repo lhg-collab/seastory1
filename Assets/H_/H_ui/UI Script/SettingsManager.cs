@@ -20,6 +20,21 @@ public class SettingsManager : MonoBehaviour
     public Toggle muteToggle;
     public Button closeButton;
 
+    [SerializeField] string mainMenuSceneName = "TitleScene";
+
+    static bool IsSceneInBuild(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return false;
+        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+        {
+            var path = SceneUtility.GetScenePathByBuildIndex(i);
+            var sceneName = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (string.Equals(sceneName, name, System.StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
+    }
+
     // ===== 자동 바인딩 옵션 =====
     [Header("=== 자동 바인딩 설정 ===")]
     public bool autoBindOnAwake = true;
@@ -131,7 +146,15 @@ public class SettingsManager : MonoBehaviour
 
         Debug.Log("[Settings] MainMenu clicked");
         Time.timeScale = 1;
-        SceneManager.LoadScene("TitleScene");
+
+        if (!IsSceneInBuild(mainMenuSceneName))
+        {
+            Debug.LogError($"[Settings] Scene '{mainMenuSceneName}' is not in Build Settings. " +
+                           "File → Build Settings… 에서 씬을 추가하거나, mainMenuSceneName을 실제 파일명으로 바꿔주세요.");
+            return;
+        }
+
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 
     public void OpenSoundSettings()
