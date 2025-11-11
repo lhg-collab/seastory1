@@ -17,15 +17,14 @@ public class UIButtonOceanFX : MonoBehaviour,
     public float tiltZOnHover = 2f;
 
     [Header("Ripple (masked by RectMask2D)")]
-    public Sprite rippleSprite;                       // 흰→투명 원형 그라디언트
-    public Material rippleAdditiveMaterial;           // UI_Additive_Maskable 할당
+    public Sprite rippleSprite;                 // 흰→투명 원형 그라디언트
     public Color rippleColor = new Color(1, 1, 1, 0.35f);
     public float rippleStartScale = 0.2f;
     public float rippleEndScale = 1.6f;
     public float rippleTime = 0.35f;
 
     [Header("Shine Sweep (Hover)")]
-    public Image shineImage;                          // 자식 Image (ui_shine_strip)
+    public Image shineImage;                    // 자식 Image (ui_shine_strip)
     public float shineDuration = 0.35f;
     [Range(0f, 1f)] public float shineOpacity = 0.35f;
     public float shinePause = 1.2f;
@@ -35,12 +34,14 @@ public class UIButtonOceanFX : MonoBehaviour,
     public AudioSource audioSource;
     public AudioClip hoverClip;
     public AudioClip pressClip;
-    public AudioClip releaseClip;
 
     RectTransform rt;
     Vector3 baseScale;
     Quaternion baseRot;
     bool pointerInside;
+
+    // 개별 코루틴 핸들(트윈/샤인 분리)
+    Coroutine tweenCo;
     Coroutine shineCo;
 
     void Awake()
@@ -48,17 +49,17 @@ public class UIButtonOceanFX : MonoBehaviour,
         rt = GetComponent<RectTransform>();
         baseScale = rt.localScale;
         baseRot = rt.localRotation;
+
         if (shineImage != null)
         {
             shineImage.raycastTarget = false;
-            if (rippleAdditiveMaterial) shineImage.material = rippleAdditiveMaterial;
             var c = shineImage.color; c.a = 0f; shineImage.color = c; // 최초엔 숨김
         }
     }
 
     void OnDisable()
     {
-        StopAllCoroutines();
+        StopTween();
         if (shineCo != null) { StopCoroutine(shineCo); shineCo = null; }
         rt.localScale = baseScale;
         rt.localRotation = baseRot;
@@ -71,8 +72,9 @@ public class UIButtonOceanFX : MonoBehaviour,
     {
         pointerInside = true;
         if (hoverClip && audioSource) audioSource.PlayOneShot(hoverClip, 0.6f);
-        StopAllCoroutines();
-        StartCoroutine(TweenScaleRot(baseScale * hoverScale, Quaternion.Euler(0, 0, tiltZOnHover), animTime));
+
+        StopTween(); // ★ 샤인은 건드리지 않음
+        tweenCo = StartCoroutine(TweenScaleRot(baseScale * hoverScale, Quaternion.Euler(0, 0, tiltZOnHover), animTime));
 
         if (shineImage)
         {
@@ -84,8 +86,9 @@ public class UIButtonOceanFX : MonoBehaviour,
     public void OnPointerExit(PointerEventData e)
     {
         pointerInside = false;
-        StopAllCoroutines();
-        StartCoroutine(TweenScaleRot(baseScale, baseRot, animTime * 0.8f));
+
+        StopTween();
+        tweenCo = StartCoroutine(TweenScaleRot(baseScale, baseRot, animTime * 0.8f));
 
         if (shineCo != null) { StopCoroutine(shineCo); shineCo = null; }
         if (shineImage) { var c = shineImage.color; c.a = 0f; shineImage.color = c; }
@@ -94,24 +97,29 @@ public class UIButtonOceanFX : MonoBehaviour,
     public void OnPointerDown(PointerEventData e)
     {
         if (pressClip && audioSource) audioSource.PlayOneShot(pressClip, 0.7f);
-        StopAllCoroutines();
-        StartCoroutine(TweenScaleRot(baseScale * pressedScale, Quaternion.identity, animTime * 0.7f));
+
+        StopTween(); // ★ 샤인 유지
+        tweenCo = StartCoroutine(TweenScaleRot(baseScale * pressedScale, Quaternion.identity, animTime * 0.7f));
     }
 
     public void OnPointerUp(PointerEventData e)
     {
         if (pointerInside)
         {
-            if (releaseClip && audioSource) audioSource.PlayOneShot(releaseClip, 0.8f);
-            StopAllCoroutines();
-            StartCoroutine(BounceThenReturn());
+            StopTween(); // ★ 샤인 유지
+            tweenCo = StartCoroutine(BounceThenReturn());
             SpawnRipple(e);
         }
         else
         {
-            StopAllCoroutines();
-            StartCoroutine(TweenScaleRot(baseScale, baseRot, animTime * 0.8f));
+            StopTween();
+            tweenCo = StartCoroutine(TweenScaleRot(baseScale, baseRot, animTime * 0.8f));
         }
+    }
+
+    void StopTween()
+    {
+        if (tweenCo != null) { StopCoroutine(tweenCo); tweenCo = null; }
     }
 
     // ---------- Anim Helpers ----------
@@ -152,8 +160,7 @@ public class UIButtonOceanFX : MonoBehaviour,
         var img = go.GetComponent<Image>();
         img.sprite = rippleSprite;
         img.raycastTarget = false;
-        img.color = rippleColor;
-        if (rippleAdditiveMaterial) img.material = rippleAdditiveMaterial; // ★ Additive + 마스크 대응
+        img.color = rippleColor; // ★ 머티리얼 사용 안 함
 
         var rrt = go.GetComponent<RectTransform>();
         rrt.anchorMin = rrt.anchorMax = new Vector2(0.5f, 0.5f);
@@ -195,7 +202,7 @@ public class UIButtonOceanFX : MonoBehaviour,
     {
         do
         {
-            yield return StartCoroutine(ShineOnce());
+            yield return ShineOnce();
             if (!shineLoopWhileHover) break;
             yield return new WaitForSecondsRealtime(shinePause);
         } while (pointerInside);
@@ -208,7 +215,7 @@ public class UIButtonOceanFX : MonoBehaviour,
         var srt = shineImage.rectTransform;
         var btn = rt;
 
-        float halfW = btn.rect.width * 0.55f;       // 시작/종료 지점(버튼 밖)
+        float halfW = btn.rect.width * 0.55f;   // 시작/종료 지점(버튼 밖)
         Vector2 start = new Vector2(-halfW, 0f);
         Vector2 end = new Vector2(+halfW, 0f);
 
@@ -220,7 +227,7 @@ public class UIButtonOceanFX : MonoBehaviour,
         {
             t += Time.unscaledDeltaTime;
             float p = Mathf.Clamp01(t / shineDuration);
-            float a = Mathf.Sin(p * Mathf.PI);      // 중앙에서 최대
+            float a = Mathf.Sin(p * Mathf.PI); // 중앙에서 최대
             srt.anchoredPosition = Vector2.Lerp(start, end, p);
             c.a = a * shineOpacity;
             shineImage.color = c;
