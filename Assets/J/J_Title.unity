@@ -202,7 +202,7 @@ GameObject:
   - component: {fileID: 196640871}
   - component: {fileID: 196640870}
   m_Layer: 5
-  m_Name: Title
+  m_Name: J_Title
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -277,12 +277,12 @@ GameObject:
   - component: {fileID: 345153116}
   - component: {fileID: 345153115}
   m_Layer: 5
-  m_Name: Foam
+  m_Name: J_Foam
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &345153114
 RectTransform:
   m_ObjectHideFlags: 0
@@ -337,6 +337,66 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 345153113}
   m_CullTransparentMesh: 1
+--- !u!1 &771540533
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 771540534}
+  - component: {fileID: 771540535}
+  m_Layer: 5
+  m_Name: J_BirdMover
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &771540534
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 771540533}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1969906437}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &771540535
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 771540533}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4eff84b4fc21654c8131c0098bed1ac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  birdPrefab: {fileID: 3499713172485922702, guid: 2c6211052251cce4e92a2ca097d60faa,
+    type: 3}
+  spawnParent: {fileID: 771540534}
+  minY: -100
+  maxY: 550
+  minInterval: 1
+  maxInterval: 3
+  maxBirds: 5
+  minSpeed: 180
+  maxSpeed: 260
+  minScale: 0.8
+  maxScale: 1.2
 --- !u!1 &1547361341
 GameObject:
   m_ObjectHideFlags: 0
@@ -605,7 +665,7 @@ GameObject:
   - component: {fileID: 1969906435}
   - component: {fileID: 1969906434}
   m_Layer: 5
-  m_Name: Canvas
+  m_Name: J_Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -689,6 +749,7 @@ RectTransform:
   - {fileID: 2065599571}
   - {fileID: 345153114}
   - {fileID: 196640869}
+  - {fileID: 771540534}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -708,7 +769,7 @@ GameObject:
   - component: {fileID: 2065599573}
   - component: {fileID: 2065599572}
   m_Layer: 5
-  m_Name: BG
+  m_Name: J_BG
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
