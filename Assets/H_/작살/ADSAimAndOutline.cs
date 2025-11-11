@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Cinemachine;
@@ -6,27 +6,52 @@ using Cinemachine;
 [DisallowMultipleComponent]
 public class ADSAimAndOutline : MonoBehaviour
 {
-    [Header("Cameras")]
-    public CinemachineVirtualCamera thirdPersonCam;   // ±âÁ¸ 3ÀÎÄª vcam
-    public CinemachineVirtualCamera firstPersonCam;   // 1ÀÎÄª vcam(¸Ó¸®/Ä«¸Ş¶ó À§Ä¡)
-    public Camera cam;                                // ·¹ÀÌ ¼Ò½º(ºñ¿öµÎ¸é Camera.main)
+    [Header("Cameras (3rd-person only)")]
+    public CinemachineVirtualCamera thirdPersonCam;
+    public Camera cam;                                // ë¹„ìš°ë©´ Camera.main
+    public bool forceBrainLateUpdate = true;          // âœ… Brainì„ LateUpdateë¡œ ê°•ì œ
 
     [Header("UI")]
-    public GameObject reticleUI;                      // ¿¡ÀÓ UI(Äµ¹ö½º ¾È ÀÌ¹ÌÁö)
+    public GameObject reticleUI;
 
     [Header("Aim / Interact")]
-    public float gatherDistance = 3f;                 // Ã¤Áı °¡´É °Å¸®
-    public LayerMask interactMask = ~0;               // ·¹ÀÌÄ³½ºÆ® ¸¶½ºÅ©
-    public bool includeTriggers = true;               // Triggerµµ ¸Â°Ô
+    public float gatherDistance = 3f;
+    public LayerMask interactMask = ~0;
+    public bool includeTriggers = true;
+    public bool requireAimToCollect = true;
 
-    [Header("Options")]
-    public bool holdToAim = true;                     // ¿ìÅ¬¸¯ ´©¸£°í ÀÖ´Â µ¿¾È¸¸ Á¶ÁØ
+    [Header("Division-style ADS Tuning")]
+    public float normalFOV = 60f;
+    public float aimFOV = 45f;
+    public float normalDistance = 4.5f;
+    public float aimDistance = 2.2f;
+    public Vector3 normalShoulder = new Vector3(0.5f, 0.0f, 0f);
+    public Vector3 aimShoulder = new Vector3(0.8f, 0.1f, 0f);
+    public float camBlendLerp = 12f;
 
-    Transform _player;                                // °Å¸® Ã¼Å©¿ë(º¸Åë ÇÃ·¹ÀÌ¾î ·çÆ®)
+    [Header("Movement while ADS (Starter Assets optional)")]
+    public bool slowDownWhileADS = true;
+    [Range(0.2f, 1.0f)] public float adsSpeedFactor = 0.6f;
+
+    [Header("Hit Assist / Debug")]
+    public float aimAssistRadius = 0.15f;             // âœ… ìŠ¤í”¼ì–´ìºìŠ¤íŠ¸ ë°˜ê²½(ë¯¸ì„¸ ë³´ì •)
+    public bool drawDebugRay = false;                 // ë””ë²„ê·¸ ë¼ì¸
+
+    Transform _player;
     bool _isAiming;
-    GameObject _highlightRoot;                        // ÇöÀç ÇÏÀÌ¶óÀÌÆ® ÁßÀÎ ·çÆ®
+
+    GameObject _highlightRoot;
+    Gatherable _currentTarget;
+    float _currentTargetDist;
     List<Renderer> _cachedRends = new List<Renderer>();
-    Behaviour _cachedOutline;                         // ¿ÜºÎ Outline ÄÄÆ÷³ÍÆ®(ÀÖÀ¸¸é)
+    Behaviour _cachedOutline;
+
+    Cinemachine3rdPersonFollow _tpf;
+    CinemachineBrain _brain;
+
+    // Starter Assets ê°ì†(ìˆì„ ë•Œë§Œ ì ìš©)
+    Component _tpc; System.Reflection.PropertyInfo _piMoveSpeed, _piSprintSpeed;
+    float _origMoveSpeed, _origSprintSpeed; bool _adsSpeedApplied;
 
     void Awake()
     {
@@ -34,94 +59,157 @@ public class ADSAimAndOutline : MonoBehaviour
         if (!cam) cam = Camera.main;
         if (reticleUI) reticleUI.SetActive(false);
 
-        // ±âº» ¿ì¼±¼øÀ§(3ÀÎÄª > 1ÀÎÄª). Á¶ÁØ Áß¿¡¸¸ 1ÀÎÄªÀ» ¿Ã¸²
-        if (thirdPersonCam) thirdPersonCam.Priority = 10;
-        if (firstPersonCam) firstPersonCam.Priority = 5;
+        if (thirdPersonCam)
+        {
+            _tpf = thirdPersonCam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+            thirdPersonCam.m_Lens.FieldOfView = normalFOV;
+            if (_tpf) { _tpf.CameraDistance = normalDistance; _tpf.ShoulderOffset = normalShoulder; }
+        }
+
+        // âœ… Brain ì—…ë°ì´íŠ¸ íƒ€ì´ë° ê°•ì œ (ì¹´ë©”ë¼ê°€ ë¨¼ì €, ìŠ¤ìº”ì€ ê·¸ ë‹¤ìŒ)
+        if (cam)
+        {
+            _brain = cam.GetComponent<CinemachineBrain>();
+            if (_brain && forceBrainLateUpdate)
+                _brain.m_UpdateMethod = CinemachineBrain.UpdateMethod.LateUpdate;
+        }
+
+        TryBindStarterAssetsTpc();
     }
 
     void Update()
     {
-        // ¿ìÅ¬¸¯À¸·Î Á¶ÁØ »óÅÂ
+        // ìš°í´ë¦­ ìœ ì§€í˜• ADS
         bool aimPressed = Mouse.current?.rightButton?.isPressed ?? false;
-        bool nextAim = holdToAim ? aimPressed : ToggleLogic(aimPressed);
+        SetAimState(aimPressed);
 
-        if (nextAim != _isAiming)
+        // ì±„ì§‘ ì…ë ¥
+        bool collectPressed =
+            (Mouse.current?.leftButton?.wasPressedThisFrame ?? false) ||
+            (Keyboard.current?.eKey?.wasPressedThisFrame ?? false);
+
+        if (collectPressed && _currentTarget != null)
         {
-            _isAiming = nextAim;
-            ApplyAimState(_isAiming);
-        }
-
-        // Á¶ÁØ ÁßÀÏ ¶§¸¸ Áß¾Ó ·¹ÀÌ·Î ´ë»ó Å½»ö + ÇÏÀÌ¶óÀÌÆ®
-        if (_isAiming && cam)
-        {
-            Ray ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-            var qti = includeTriggers ? QueryTriggerInteraction.Collide : QueryTriggerInteraction.Ignore;
-
-            if (Physics.Raycast(ray, out var hit, 1000f, interactMask, qti))
+            if (!requireAimToCollect || _isAiming)
             {
-                var g = hit.collider.GetComponentInParent<Gatherable>();
-                float dist = Vector3.Distance(_player.position, hit.point);
-                if (g && dist <= gatherDistance)
+                if (_currentTargetDist <= gatherDistance)
                 {
-                    SetHighlight(g.gameObject, true);
+                    _currentTarget.TryCollect(_player);
+                    ClearHighlight();
+                    _currentTarget = null;
                 }
-                else ClearHighlight();
             }
-            else ClearHighlight();
         }
-        else
+
+        // ì¹´ë©”ë¼ íŒŒë¼ë¯¸í„° ë³´ê°„
+        if (thirdPersonCam)
         {
+            float targetFov = _isAiming ? aimFOV : normalFOV;
+            thirdPersonCam.m_Lens.FieldOfView = Mathf.Lerp(thirdPersonCam.m_Lens.FieldOfView, targetFov, Time.deltaTime * camBlendLerp);
+            if (_tpf)
+            {
+                _tpf.CameraDistance = Mathf.Lerp(_tpf.CameraDistance, _isAiming ? aimDistance : normalDistance, Time.deltaTime * camBlendLerp);
+                _tpf.ShoulderOffset = Vector3.Lerp(_tpf.ShoulderOffset, _isAiming ? aimShoulder : normalShoulder, Time.deltaTime * camBlendLerp);
+            }
+        }
+    }
+
+    // âœ… ì¹´ë©”ë¼ê°€ ëª¨ë‘ ê°±ì‹ ëœ "í›„"ì— íƒ€ê²Ÿ ìŠ¤ìº”
+    void LateUpdate()
+    {
+        UpdateTargetAndHighlight();
+    }
+
+    void SetAimState(bool on)
+    {
+        if (_isAiming == on) return;
+        _isAiming = on;
+        if (reticleUI) reticleUI.SetActive(_isAiming);
+
+        if (slowDownWhileADS && _tpc != null)
+        {
+            if (_isAiming && !_adsSpeedApplied)
+            {
+                _origMoveSpeed = ReadFloat(_tpc, _piMoveSpeed, 4.0f);
+                _origSprintSpeed = ReadFloat(_tpc, _piSprintSpeed, 5.335f);
+                WriteFloat(_tpc, _piMoveSpeed, _origMoveSpeed * adsSpeedFactor);
+                WriteFloat(_tpc, _piSprintSpeed, _origSprintSpeed * adsSpeedFactor);
+                _adsSpeedApplied = true;
+            }
+            else if (!_isAiming && _adsSpeedApplied)
+            {
+                WriteFloat(_tpc, _piMoveSpeed, _origMoveSpeed);
+                WriteFloat(_tpc, _piSprintSpeed, _origSprintSpeed);
+                _adsSpeedApplied = false;
+            }
+        }
+    }
+
+    // --- íƒ€ê²Ÿ íƒìƒ‰ & í•˜ì´ë¼ì´íŠ¸ (ì •ì§€ ìƒíƒœì—ì„œë„ ì˜ ì¡íˆê²Œ ë ˆì´ + ìŠ¤í”¼ì–´) ---
+    void UpdateTargetAndHighlight()
+    {
+        if (!cam) cam = Camera.main;
+
+        if (!_isAiming || !cam)
+        {
+            _currentTarget = null;
             ClearHighlight();
+            return;
         }
-    }
 
-    // ---------- Aim ÀüÈ¯ ----------
-    void ApplyAimState(bool on)
-    {
-        if (reticleUI) reticleUI.SetActive(on);
+        Ray ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        var qti = includeTriggers ? QueryTriggerInteraction.Collide : QueryTriggerInteraction.Ignore;
 
-        if (firstPersonCam && thirdPersonCam)
+        bool hitSomething = false;
+        RaycastHit hit;
+
+        // 1) ìŠ¤í”¼ì–´ìºìŠ¤íŠ¸ë¡œ ì‚´ì§ ì—¬ìœ ë¥¼ ì£¼ê³ 
+        if (aimAssistRadius > 0f && Physics.SphereCast(ray, aimAssistRadius, out hit, 1000f, interactMask, qti))
         {
-            if (on)
+            hitSomething = true;
+        }
+        // 2) ëª» ì¡ìœ¼ë©´ ë ˆì´ìºìŠ¤íŠ¸ë¡œ ì¬ì‹œë„
+        else if (Physics.Raycast(ray, out hit, 1000f, interactMask, qti))
+        {
+            hitSomething = true;
+        }
+
+        if (drawDebugRay)
+        {
+            Color c = hitSomething ? Color.cyan : Color.red;
+            Debug.DrawRay(ray.origin, ray.direction * (hitSomething ? hit.distance : 3f), c, 0.02f);
+            if (aimAssistRadius > 0f)
+                DebugExtension.DebugWireSphere(hitSomething ? hit.point : ray.origin + ray.direction * 3f, aimAssistRadius, c, 0.02f);
+        }
+
+        if (hitSomething)
+        {
+            var g = hit.collider.GetComponentInParent<Gatherable>();
+            _currentTargetDist = Vector3.Distance(_player.position, hit.point);
+
+            if (g && _currentTargetDist <= gatherDistance)
             {
-                firstPersonCam.Priority = 50;
-                thirdPersonCam.Priority = 10;
-            }
-            else
-            {
-                firstPersonCam.Priority = 5;
-                thirdPersonCam.Priority = 50;
+                _currentTarget = g;
+                SetHighlight(g.gameObject, true);
+                return;
             }
         }
+
+        _currentTarget = null;
+        ClearHighlight();
     }
 
-    bool _toggleArmed; // Åä±Û ¸ğµå¿ë ³»ºÎ »óÅÂ
-    bool ToggleLogic(bool pressedNow)
-    {
-        if (pressedNow && !_toggleArmed) { _toggleArmed = true; return !_isAiming; }
-        if (!pressedNow && _toggleArmed) _toggleArmed = false;
-        return _isAiming;
-    }
-
-    // ---------- Highlight ----------
+    // --- í•˜ì´ë¼ì´íŠ¸ ---
     void SetHighlight(GameObject root, bool on)
     {
         if (_highlightRoot == root && on) return;
-
-        // ÀÌÀü ´ë»ó ÇØÁ¦
         if (_highlightRoot && _highlightRoot != root) ClearHighlight();
 
         _highlightRoot = root;
 
-        // 1) ¿ÜºÎ Outline ÄÄÆ÷³ÍÆ®°¡ ÀÖÀ¸¸é ±×°É ÄÒ´Ù (QuickOutline/cakeslice µî Å¬·¡½ºÅ¸ÀÔ¸íÀÌ º¸Åë "Outline")
         _cachedOutline = FindOutlineBehaviour(root);
-        if (_cachedOutline != null)
-        {
-            _cachedOutline.enabled = on;
-            return;
-        }
+        if (_cachedOutline != null) { _cachedOutline.enabled = on; return; }
 
-        // 2) ¾øÀ¸¸é Emission ¹ß±¤À¸·Î ´ëÃ¼
         _cachedRends.Clear();
         root.GetComponentsInChildren(true, _cachedRends);
         foreach (var r in _cachedRends)
@@ -136,11 +224,8 @@ public class ADSAimAndOutline : MonoBehaviour
     {
         if (!_highlightRoot) return;
 
-        if (_cachedOutline != null)
-        {
-            _cachedOutline.enabled = false;
-        }
-        else if (_cachedRends != null && _cachedRends.Count > 0)
+        if (_cachedOutline != null) _cachedOutline.enabled = false;
+        else
         {
             foreach (var r in _cachedRends)
             {
@@ -148,7 +233,6 @@ public class ADSAimAndOutline : MonoBehaviour
                 r.material.DisableKeyword("_EMISSION");
             }
         }
-
         _highlightRoot = null;
         _cachedOutline = null;
         _cachedRends.Clear();
@@ -156,14 +240,52 @@ public class ADSAimAndOutline : MonoBehaviour
 
     Behaviour FindOutlineBehaviour(GameObject root)
     {
-        // ÀÚ½Ä Æ÷ÇÔ ¸ğµç ÄÄÆ÷³ÍÆ® ¼øÈ¸ÇØ¼­ Å¸ÀÔ¸íÀÌ "Outline"ÀÎ Behaviour Ã£±â
         var comps = root.GetComponentsInChildren<Component>(true);
         for (int i = 0; i < comps.Length; i++)
         {
             var b = comps[i] as Behaviour;
-            if (b != null && b.GetType().Name == "Outline")
-                return b;
+            if (b != null && b.GetType().Name == "Outline") return b;
         }
         return null;
+    }
+
+    // --- Starter Assets ê°ì† ë°”ì¸ë”© (ìˆì„ ë•Œë§Œ) ---
+    void TryBindStarterAssetsTpc()
+    {
+        var list = GetComponentsInParent<Component>(true);
+        foreach (var c in list)
+        {
+            if (c == null) continue;
+            if (c.GetType().Name == "ThirdPersonController")
+            {
+                _tpc = c;
+                var t = c.GetType();
+                _piMoveSpeed = t.GetProperty("MoveSpeed");
+                _piSprintSpeed = t.GetProperty("SprintSpeed");
+                break;
+            }
+        }
+    }
+    float ReadFloat(object obj, System.Reflection.PropertyInfo pi, float fallback) { try { return (pi != null) ? (float)pi.GetValue(obj) : fallback; } catch { return fallback; } }
+    void WriteFloat(object obj, System.Reflection.PropertyInfo pi, float v) { try { if (pi != null && pi.CanWrite) pi.SetValue(obj, v); } catch { } }
+}
+
+// --- ê°„ë‹¨ ë””ë²„ê·¸ êµ¬ì²´ ê·¸ë¦¬ê¸° ìœ í‹¸(ì„ íƒ) ---
+public static class DebugExtension
+{
+    public static void DebugWireSphere(Vector3 pos, float radius, Color color, float duration = 0f)
+    {
+        const int seg = 16;
+        Vector3 last = pos + new Vector3(radius, 0, 0);
+        for (int i = 1; i <= seg; i++)
+        {
+            float a = i * (Mathf.PI * 2f / seg);
+            Vector3 next = pos + new Vector3(Mathf.Cos(a) * radius, 0, Mathf.Sin(a) * radius);
+            Debug.DrawLine(last, next, color, duration);
+            Debug.DrawLine(pos + new Vector3(0, Mathf.Cos(a) * radius, Mathf.Sin(a) * radius),
+                           pos + new Vector3(0, Mathf.Cos(a - (Mathf.PI * 2f / seg)) * radius, Mathf.Sin(a - (Mathf.PI * 2f / seg)) * radius),
+                           color, duration);
+            last = next;
+        }
     }
 }
