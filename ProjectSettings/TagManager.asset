@@ -6,6 +6,7 @@ TagManager:
   tags:
   - CinemachineTarget
   - Water
+  - gether
   layers:
   - Default
   - TransparentFX
@@ -13,10 +14,10 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
+  - underfloor
+  - gather
+  - Player
+  - fish
   - 
   - 
   - 
