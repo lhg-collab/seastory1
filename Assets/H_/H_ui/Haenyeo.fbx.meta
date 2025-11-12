@@ -657,7 +657,7 @@ ModelImporter:
     - name: mixamorig:LeftHandRing1
       parentName: mixamorig:LeftHand
       position: {x: -0.1024684, y: 0.663152, z: -0.014468517}
-      rotation: {x: -0.012524375, y: 0.0043511, z: -0.15084718, w: 0.98846817}
+      rotation: {x: -0.012524376, y: 0.0043511, z: -0.1508472, w: 0.98846817}
       scale: {x: 1, y: 1, z: 1}
     - name: mixamorig:LeftHandRing2
       parentName: mixamorig:LeftHandRing1
