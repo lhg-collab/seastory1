@@ -33,7 +33,6 @@ public class J_ShopUIManager : MonoBehaviour
     public bool autoLockCinemachineInputs = true;
 
     // 내부 상태
-    readonly List<J_ShopSellCardUI> cards = new();
     readonly List<Behaviour> reEnableCache = new();
     readonly List<Behaviour> autoFoundCmInputs = new();
 

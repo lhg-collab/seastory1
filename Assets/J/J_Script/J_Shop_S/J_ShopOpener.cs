@@ -4,13 +4,13 @@ using System.Linq;
 public class J_ShopOpener : MonoBehaviour
 {
     [Header("References")]
-    public Camera cam;                        // Main Camera 또는 실제 플레이 카메라를 꼭 넣기
-    public Transform player;                  // Player Transform(인스펙터에 드래그 추천)
-    public LayerMask npcMask;                 // NPC 레이어만 포함
-    public J_ShopUIManager shopUI;
+    public Camera cam;                         // 플레이 카메라
+    public Transform player;                   // Player Transform
+    public LayerMask npcMask;                  // NPC 레이어만 포함
+    public SellingUIManager sellingUI;         //  여기로 변경
 
     [Header("Interaction")]
-    public KeyCode interactKey = KeyCode.E;
+    public KeyCode interactKey = KeyCode.E;    // E키로 열기
     public float rayLength = 50f;
 
     J_ShopNPC currentNpc;
@@ -24,32 +24,26 @@ public class J_ShopOpener : MonoBehaviour
             var p = GameObject.FindGameObjectWithTag("Player");
             if (p) player = p.transform;
         }
+        if (!sellingUI) sellingUI = FindObjectOfType<SellingUIManager>(true); // 비활성 포함 검색
     }
 
     void OnDisable() => ClearHighlight();
 
     void Update()
     {
-        // 필수 참조 체크 (한 번만 경고)
-        if (!cam || !shopUI)
-        {
-            if (!cam) Debug.LogWarning("[J_ShopOpener] cam이 비었습니다. 인스펙터에 카메라를 넣으세요.", this);
-            if (!shopUI) Debug.LogWarning("[J_ShopOpener] shopUI가 비었습니다. J_ShopUIManager를 넣으세요.", this);
-            return;
-        }
+        if (!cam || !sellingUI) return;
 
-        if (shopUI.panel && shopUI.panel.activeSelf)
+        // 상점 열려 있으면 하이라이트/입력 무시
+        if (sellingUI.IsUIOpen())
         {
             ClearHighlight();
             return;
         }
 
-        // 화면 중앙 레이
+        // 화면 중앙 레이캐스트
         Ray ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f));
-
         J_ShopNPC hitNpc = null;
 
-        // NPC 레이어만 검사 (가판대 등에 가려도 NPC만 집힘)
         var hits = Physics.RaycastAll(ray, rayLength, npcMask, QueryTriggerInteraction.Ignore);
         if (hits != null && hits.Length > 0)
         {
@@ -58,7 +52,6 @@ public class J_ShopOpener : MonoBehaviour
                 var cand = h.collider.GetComponentInParent<J_ShopNPC>();
                 if (cand == null) continue;
 
-                // player가 없으면 거리 체크는 생략(가능하면 인스펙터에 드래그로 지정!)
                 if (player)
                 {
                     float dist = Vector3.Distance(player.position, h.collider.transform.position);
@@ -79,9 +72,10 @@ public class J_ShopOpener : MonoBehaviour
             if (currentHL) currentHL.SetHighlighted(true);
         }
 
+        // E로 열기
         if (currentNpc && Input.GetKeyDown(interactKey))
         {
-            shopUI.Open(currentNpc);
+            sellingUI.OpenUI();
             ClearHighlight();
         }
 
@@ -95,15 +89,5 @@ public class J_ShopOpener : MonoBehaviour
         if (currentHL) currentHL.SetHighlighted(false);
         currentNpc = null;
         currentHL = null;
-    }
-}
-
-// 한 번만 경고 찍는 작은 헬퍼
-static class DebugExt
-{
-    static bool warned;
-    public static void DebugLogWarningOnce(this object _, string msg, Object ctx = null)
-    {
-        if (warned) return; warned = true; Debug.LogWarning(msg, ctx);
     }
 }
