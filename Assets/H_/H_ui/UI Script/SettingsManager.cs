@@ -20,27 +20,17 @@ public class SettingsManager : MonoBehaviour
     public Toggle muteToggle;
     public Button closeButton;
 
+    [Header("=== 기타 ===")]
     [SerializeField] string mainMenuSceneName = "TitleScene";
-
-    static bool IsSceneInBuild(string name)
-    {
-        if (string.IsNullOrEmpty(name)) return false;
-        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
-        {
-            var path = SceneUtility.GetScenePathByBuildIndex(i);
-            var sceneName = System.IO.Path.GetFileNameWithoutExtension(path);
-            if (string.Equals(sceneName, name, System.StringComparison.OrdinalIgnoreCase))
-                return true;
-        }
-        return false;
-    }
+    [SerializeField] bool useOnGUIFallback = false; // 필요 시 true
 
     // ===== 자동 바인딩 옵션 =====
     [Header("=== 자동 바인딩 설정 ===")]
     public bool autoBindOnAwake = true;
     public bool includeInactiveUI = true; // 비활성까지 탐색
 
-    public string[] settingsPanelNames = { "SettingsPanel", "PausePanel", "UI_Settings" };
+    // ⚠️ 자기 자신(UI_Settings) 제거: 실제 패널만 후보로
+    public string[] settingsPanelNames = { "SettingsPanel", "PausePanel" };
     public string[] soundPanelNames = { "SoundSettingsPanel", "AudioPanel", "UI_Sound" };
     public string[] inventoryPanelNames = { "InventoryPanel", "UI_Inventory", "Inventory" };
 
@@ -57,38 +47,83 @@ public class SettingsManager : MonoBehaviour
     string currentSceneName;
 
     // ================== 라이프사이클 ==================
+    void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }
+    void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded; }
+
     void Awake()
     {
         if (autoBindOnAwake) AutoBindUI();
-        WireUpListeners(); // (초기) 중복 제거 후 연결
-        EnsureEventSystem(); // 최소 1개의 EventSystem 보장
+        WireUpListeners();       // (초기) 중복 제거 후 연결
+        EnsureEventSystem();     // 최소 1개의 EventSystem 보장
     }
 
     void Start()
     {
         currentSceneName = SceneManager.GetActiveScene().name;
-
         settingsPanel?.SetActive(false);
         soundSettingsPanel?.SetActive(false);
-
         LoadSettings();
-        // (aim/gather 관련 가시성 제어 제거)
     }
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (EscapePressedThisFrame())
             ToggleSettings();
+    }
+
+    void OnGUI()
+    {
+        if (!useOnGUIFallback) return;
+        if (Event.current != null &&
+            Event.current.type == EventType.KeyDown &&
+            Event.current.keyCode == KeyCode.Escape)
+        {
+            ToggleSettings();
+            Event.current.Use();
+        }
+    }
+
+    void OnSceneLoaded(Scene s, LoadSceneMode m)
+    {
+        // DDOL 환경에서도 현재 씬명 최신화
+        currentSceneName = s.name;
+        // 안전 차원에서 패널은 닫아두기
+        settingsPanel?.SetActive(false);
+        soundSettingsPanel?.SetActive(false);
+        isPaused = false;
+        Time.timeScale = 1;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    // ================== 입력 유틸(구+신 입력 시스템/패드 지원) ==================
+    bool EscapePressedThisFrame()
+    {
+#if ENABLE_INPUT_SYSTEM
+        var kb = UnityEngine.InputSystem.Keyboard.current;
+        if (kb != null && kb.escapeKey.wasPressedThisFrame) return true;
+        var gp = UnityEngine.InputSystem.Gamepad.current;
+        if (gp != null && gp.startButton.wasPressedThisFrame) return true;
+#endif
+        return Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.JoystickButton7);
     }
 
     // ================== 핵심 동작 ==================
     void ToggleSettings()
     {
-        // 열기/닫기 전에 “현재 보이는 패널”로 다시 잡기 + 내부 버튼 재바인딩
-        if (isPaused == false) // 열릴 때
+        // 열릴 때: 실제 패널 재탐색 + 없으면 중단(NullRef 방지)
+        if (!isPaused)
         {
             settingsPanel = FindTopmostPanel(settingsPanelNames) ?? settingsPanel;
+            if (!settingsPanel)
+            {
+                Debug.LogError("[Settings] settingsPanel not found. (SettingsPanel/PausePanel)");
+                AutoBindUI();
+                settingsPanel = FindTopmostPanel(settingsPanelNames) ?? settingsPanel;
+                if (!settingsPanel) return;
+            }
             RebindSettingsButtons(settingsPanel);
+            Debug.Log("[Settings] open target panel = " + GetPath(settingsPanel.transform));
         }
 
         isPaused = !isPaused;
@@ -115,8 +150,7 @@ public class SettingsManager : MonoBehaviour
 
     public void ResumeGame()
     {
-        if (AudioManager.instance != null)
-            AudioManager.instance.PlayButtonClick();
+        if (AudioManager.instance != null) AudioManager.instance.PlayButtonClick();
 
         Debug.Log("[Settings] Resume clicked");
         isPaused = false;
@@ -129,20 +163,23 @@ public class SettingsManager : MonoBehaviour
 
     public void RestartGame()
     {
-        if (AudioManager.instance != null)
-            AudioManager.instance.PlayButtonClick();
+        if (AudioManager.instance != null) AudioManager.instance.PlayButtonClick();
 
         Debug.Log("[Settings] Restart clicked");
+        // 정지/커서 상태 정리
         Time.timeScale = 1;
-        settingsPanel?.SetActive(false); // null-safe 보강
+        settingsPanel?.SetActive(false);
         isPaused = false;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
+        // 현재 씬 다시 로드
         SceneManager.LoadScene(currentSceneName);
     }
 
     public void GoToMainMenu()
     {
-        if (AudioManager.instance != null)
-            AudioManager.instance.PlayButtonClick();
+        if (AudioManager.instance != null) AudioManager.instance.PlayButtonClick();
 
         Debug.Log("[Settings] MainMenu clicked");
         Time.timeScale = 1;
@@ -150,37 +187,42 @@ public class SettingsManager : MonoBehaviour
         if (!IsSceneInBuild(mainMenuSceneName))
         {
             Debug.LogError($"[Settings] Scene '{mainMenuSceneName}' is not in Build Settings. " +
-                           "File → Build Settings… 에서 씬을 추가하거나, mainMenuSceneName을 실제 파일명으로 바꿔주세요.");
+                           "File → Build Settings… 에서 씬 추가 또는 mainMenuSceneName 수정 필요.");
             return;
         }
+
+        // ★ 메인메뉴(타이틀) 이동 전에는 커서를 '보이게/Unlock'
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
 
         SceneManager.LoadScene(mainMenuSceneName);
     }
 
     public void OpenSoundSettings()
     {
-        if (AudioManager.instance != null)
-            AudioManager.instance.PlayButtonClick();
+        if (AudioManager.instance != null) AudioManager.instance.PlayButtonClick();
 
-        // “현재 보이는 소리 패널”을 다시 찾아서 내부 UI 재바인딩
         soundSettingsPanel = FindTopmostPanel(soundPanelNames) ?? soundSettingsPanel;
-        RebindSoundButtons(soundSettingsPanel);
+        if (!soundSettingsPanel)
+        {
+            Debug.LogError("[Settings] soundSettingsPanel not found. (SoundSettingsPanel/AudioPanel/UI_Sound)");
+            AutoBindUI();
+            soundSettingsPanel = FindTopmostPanel(soundPanelNames) ?? soundSettingsPanel;
+            if (!soundSettingsPanel) return;
+        }
 
-        soundSettingsPanel?.SetActive(true);
+        RebindSoundButtons(soundSettingsPanel);
+        soundSettingsPanel.SetActive(true);
 
         EnsureEventSystem();
         EnsurePanelClickable(soundSettingsPanel, bringToFront: true);
 
-        Debug.Log("[Settings] Sound panel open");
+        Debug.Log("[Settings] Sound panel open = " + GetPath(soundSettingsPanel.transform));
     }
 
     public void CloseSoundSettings()
     {
-        Debug.Log("[Settings] Sound panel close clicked");
-
-        if (AudioManager.instance != null)
-            AudioManager.instance.PlayButtonClick();
-
+        if (AudioManager.instance != null) AudioManager.instance.PlayButtonClick();
         soundSettingsPanel?.SetActive(false);
     }
 
@@ -269,8 +311,8 @@ public class SettingsManager : MonoBehaviour
 
         var candidates = names
             .SelectMany(n => Resources.FindObjectsOfTypeAll<Transform>()
-                                      .Where(t => t && t.gameObject.scene.IsValid() &&
-                                                  t.name.Equals(n, System.StringComparison.OrdinalIgnoreCase)))
+                         .Where(t => t && t.gameObject.scene.IsValid() &&
+                                     t.name.Equals(n, System.StringComparison.OrdinalIgnoreCase)))
             .Select(t => t.gameObject)
             .Distinct()
             .ToArray();
@@ -377,19 +419,23 @@ public class SettingsManager : MonoBehaviour
     {
         if (!panel) return;
 
+        // 1) 패널이 반드시 어떤 Canvas 아래에 있어야 함
         var canvas = panel.GetComponentInParent<Canvas>(true);
         if (!canvas)
         {
-            canvas = panel.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            Debug.LogWarning("[Settings] Target has no parent Canvas: " + panel.name);
+            return; // 잘못된 대상이면 더 진행하지 않음
         }
 
+        // 2) GraphicRaycaster 보장
         var ray = canvas.GetComponent<GraphicRaycaster>();
-        if (!ray) canvas.gameObject.AddComponent<GraphicRaycaster>();
+        if (!ray) ray = canvas.gameObject.AddComponent<GraphicRaycaster>();
 
+        // 3) Screen Space - Camera 라면 카메라 지정
         if (canvas.renderMode != RenderMode.ScreenSpaceOverlay && canvas.worldCamera == null)
             canvas.worldCamera = Camera.main;
 
+        // 4) 이 패널과 그 부모 체인의 CanvasGroup은 반드시 클릭 가능 상태로
         foreach (var cg in panel.GetComponentsInParent<CanvasGroup>(true))
         {
             cg.alpha = Mathf.Max(0.0001f, cg.alpha);
@@ -397,16 +443,21 @@ public class SettingsManager : MonoBehaviour
             cg.blocksRaycasts = true;
         }
 
-        // 페이드/블로커가 클릭 차단 중이면 해제
+        // 5) 같은 Canvas 안에서 "Fader/Blocker/Mask" 같은 투명 블로커는 차단 해제
         var groups = canvas.GetComponentsInChildren<CanvasGroup>(true);
         foreach (var cg in groups)
         {
-            if (panel == cg.gameObject) continue;
+            if (cg == null || cg.gameObject == panel) continue;
+
             var n = cg.name.ToLower();
-            if ((n.Contains("fader") || n.Contains("fade") || n.Contains("blocker")) && cg.alpha < 0.01f)
-                cg.blocksRaycasts = false;
+            bool looksLikeBlocker = n.Contains("fader") || n.Contains("fade") || n.Contains("blocker") || n.Contains("mask");
+            bool invisible = cg.alpha < 0.01f || !cg.gameObject.activeInHierarchy;
+
+            if (looksLikeBlocker && invisible)
+                cg.blocksRaycasts = false; // 투명한 전체막이 레이어는 클릭 막지 않게
         }
 
+        // 6) 필요하면 최상단으로
         if (bringToFront) BringToFront(canvas);
     }
 
@@ -416,6 +467,28 @@ public class SettingsManager : MonoBehaviour
         var all = GetAllCanvases(true);
         int maxOrder = all.Length > 0 ? all.Max(c => c.sortingOrder) : 0;
         canvas.sortingOrder = maxOrder + 10;
+    }
+
+    // ======= 공용: 경로/빌드 체크 =======
+    string GetPath(Transform t)
+    {
+        if (t == null) return "(null)";
+        var s = t.name;
+        while (t.parent != null) { t = t.parent; s = t.name + "/" + s; }
+        return s;
+    }
+
+    static bool IsSceneInBuild(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return false;
+        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
+        {
+            var path = SceneUtility.GetScenePathByBuildIndex(i);
+            var sceneName = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (string.Equals(sceneName, name, System.StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 
 #if UNITY_EDITOR
@@ -438,6 +511,5 @@ public class SettingsManager : MonoBehaviour
         foreach (var h in hits)
             Debug.Log($" - {h.gameObject.name} (sortingOrder={h.sortingOrder}) path={GetPath(h.gameObject.transform)}");
     }
-    string GetPath(Transform t) { var s = t.name; while (t.parent) { t = t.parent; s = t.parent.name + "/" + s; } return s; }
 #endif
 }
