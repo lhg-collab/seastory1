@@ -50,6 +50,7 @@ public class SettingsManager : MonoBehaviour
     void OnEnable() { SceneManager.sceneLoaded += OnSceneLoaded; }
     void OnDisable() { SceneManager.sceneLoaded -= OnSceneLoaded; }
 
+
     void Awake()
     {
         if (autoBindOnAwake) AutoBindUI();

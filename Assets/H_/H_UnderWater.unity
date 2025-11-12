@@ -1550,6 +1550,7 @@ MonoBehaviour:
   tutorialCompletePanel: {fileID: 0}
   autoHideCompletePanel: 1
   completePanelHideDelay: 1.5
+  disableOnSceneName: H_UnderWater
 --- !u!114 &259504365
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1942,57 +1943,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 358554124}
   m_CullTransparentMesh: 1
---- !u!21 &403471712
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Universal Render Pipeline/Unlit
-  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AlphaClip: 0
-    - _AlphaToMask: 0
-    - _Blend: 0
-    - _BlendOp: 0
-    - _Cull: 2
-    - _Cutoff: 0.5
-    - _DstBlend: 0
-    - _DstBlendAlpha: 0
-    - _QueueOffset: 0
-    - _SampleGI: 0
-    - _SrcBlend: 1
-    - _SrcBlendAlpha: 1
-    - _Surface: 0
-    - _ZWrite: 1
-    m_Colors:
-    - _BaseColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
-    - _Color: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
-  m_BuildTextureStacks: []
 --- !u!1 &408167398
 GameObject:
   m_ObjectHideFlags: 0
@@ -2079,6 +2029,23 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_IsOn: 1
+--- !u!1 &437906733 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 58395612806769126, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
+  m_PrefabInstance: {fileID: 6403338833973184786}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &437906746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 437906733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62c9b62d6b2a30944bcc8bcd875de413, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &469947089
 GameObject:
   m_ObjectHideFlags: 0
@@ -7387,6 +7354,57 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 2.4725494
   m_Center: {x: 0.021817327, y: -0.015689969, z: -0.017399311}
+--- !u!21 &1511929111
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Universal Render Pipeline/Unlit
+  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 0
+    - _BlendOp: 0
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DstBlend: 0
+    - _DstBlendAlpha: 0
+    - _QueueOffset: 0
+    - _SampleGI: 0
+    - _SrcBlend: 1
+    - _SrcBlendAlpha: 1
+    - _Surface: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _BaseColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
+    - _Color: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
+  m_BuildTextureStacks: []
 --- !u!1 &1521591214
 GameObject:
   m_ObjectHideFlags: 0
@@ -9007,6 +9025,32 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 2665845054668629978, guid: d72f9c1f176073146be41dfbc7759bb9, type: 3}
   m_PrefabInstance: {fileID: 1745912789}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1824939973 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5990859167624009183, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
+  m_PrefabInstance: {fileID: 6403338833973184786}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &1824939974
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1824939973}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &1845792269
 GameObject:
   m_ObjectHideFlags: 0
@@ -9128,6 +9172,57 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1845792269}
   m_CullTransparentMesh: 1
+--- !u!21 &1879918349
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Universal Render Pipeline/Unlit
+  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 0
+    - _BlendOp: 0
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DstBlend: 0
+    - _DstBlendAlpha: 0
+    - _QueueOffset: 0
+    - _SampleGI: 0
+    - _SrcBlend: 1
+    - _SrcBlendAlpha: 1
+    - _Surface: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _BaseColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
+    - _Color: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
+  m_BuildTextureStacks: []
 --- !u!1001 &1946067879
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10006,14 +10101,28 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 6729656540988729638, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
+      propertyPath: m_Avatar
+      value: 
+      objectReference: {fileID: 9000000, guid: 36078ab0369161e49a29d349ae3e0739, type: 3}
+    - target: {fileID: 6729656540988729638, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 8da2852b5d9c02e4e81d83a1e25a5f9b, type: 2}
     - target: {fileID: 9079028987477878858, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 403471712}
+      objectReference: {fileID: 1879918349}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5990859167624009183, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1824939974}
+    - targetCorrespondingSourceObject: {fileID: 58395612806769126, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 437906746}
   m_SourcePrefab: {fileID: 100100000, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
