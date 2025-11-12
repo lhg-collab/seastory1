@@ -19,6 +19,10 @@ public class InventoryManager : MonoBehaviour
     public int currentGold = 0;
     public Text goldTextUI;
 
+    [Header("디버그 지급(테스트용)")]
+    public bool enableDebugHotkeys = true;   // 체크하면 단축키 동작
+    public int debugAddCount = 1;            // 한 번 누를 때 추가 개수(기본 1)
+
     private void Awake()
     {
         if (instance == null) instance = this;
@@ -156,5 +160,22 @@ public class InventoryManager : MonoBehaviour
 
         Debug.Log($"{slot.GetItem()?.itemName ?? "아이템"} {count}개 판매 완료 (+{totalPrice} Gold)");
         return true;
+    }
+    void Update()
+    {
+        if (!enableDebugHotkeys) return;
+
+        // 1: 전복, 2: 소라, 3: 해삼, 4: 문어
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            AddItem(ItemType.Abalone, debugAddCount);
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+            AddItem(ItemType.Snail, debugAddCount);
+
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+            AddItem(ItemType.SeaCucumber, debugAddCount);
+
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+            AddItem(ItemType.Octopus, debugAddCount);
     }
 }
