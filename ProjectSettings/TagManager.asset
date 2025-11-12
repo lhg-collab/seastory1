@@ -7,6 +7,7 @@ TagManager:
   - CinemachineTarget
   - Water
   - gether
+  - Portal
   layers:
   - Default
   - TransparentFX

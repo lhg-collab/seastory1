@@ -40,6 +40,7 @@ public class GatherInteractor : MonoBehaviour
                 var g = h.collider.GetComponentInParent<Gatherable>();
                 if (g) { g.TryCollect(transform); break; }
             }
+            if (InputGate.PortalInputCaptured) return; // 포탈 존에서는 채집 입력 무시
         }
     }
 
