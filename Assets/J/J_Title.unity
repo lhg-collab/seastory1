@@ -151,7 +151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 943cb560c880862428e8a9f2861e4e5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nextSceneName: H_ground
+  nextSceneName: J_Shop
   startDelay: 0
 --- !u!4 &14904280
 Transform:
@@ -1299,6 +1299,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   director: {fileID: 880493514}
+  skipAvailableAfter: 1
+  skipToTime: -1
+  allowMouseClick: 1
+  skipAudioToo: 1
 --- !u!114 &880493517
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2367,6 +2371,7 @@ MonoBehaviour:
   titleBgmSoundName: TitleBGM
   titleBgmFadeInTime: 2
   titleBgmVolume: 0.5
+  bgmStartDelay: 0.1
   seagullSoundName: Seagull
   seagullInterval: {x: 1, y: 5}
   seagullVolumeRange: {x: 1, y: 1.5}

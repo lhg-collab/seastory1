@@ -12,7 +12,7 @@ using UnityEngine.InputSystem;
 public class PortalHoldToTravel : MonoBehaviour
 {
     [Header("씬 이동")]
-    [SerializeField] string targetSceneName = "H_ground";
+    [SerializeField] string targetSceneName = "J_Shop";
     [SerializeField] float holdSeconds = 2f;
 
     [Header("입력(신/구 둘 다 지원)")]

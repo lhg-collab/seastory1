@@ -81,6 +81,14 @@ public class HoldToLoadTrigger3D : MonoBehaviour
     {
         isLoading = true;
 
+        // ★ 튜토리얼 연동:
+        //    지금 단계가 5("바다로 이동하세요.")일 때만 다음 단계로 넘김
+        var ui = FindObjectOfType<HaenyeoUIManager>();
+        if (ui != null)
+        {
+            ui.AdvanceIfStep(5);   // HaenyeoUIManager 안에서 static 상태도 같이 갱신됨
+        }
+
         if (fadeCanvasGroup && fadeBackInAfterLoad)
             DontDestroyOnLoad(fadeCanvasGroup.gameObject);
 

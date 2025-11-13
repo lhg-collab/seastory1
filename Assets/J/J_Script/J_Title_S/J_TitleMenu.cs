@@ -20,13 +20,13 @@ public class J_TitleMenu : MonoBehaviour
         if (startDelay > 0f)
             StartCoroutine(LoadAfterDelay());
         else
-            SceneManager.LoadScene("H_ground");
+            SceneManager.LoadScene("J_Shop");
     }
 
     IEnumerator LoadAfterDelay()
     {
         yield return new WaitForSecondsRealtime(startDelay);
-        SceneManager.LoadScene("H_ground");
+        SceneManager.LoadScene("J_Shop");
     }
     // 게임 종료 버튼에 연결
     public void QuitGame()

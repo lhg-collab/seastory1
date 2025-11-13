@@ -50,7 +50,7 @@ public class SellingUIManager : MonoBehaviour
             shopItemTypes.Add(ItemType.Abalone);      // 전복
             shopItemTypes.Add(ItemType.Snail);        // 소라
             shopItemTypes.Add(ItemType.SeaCucumber);  // 해삼
-            shopItemTypes.Add(ItemType.Fish);      // 생선
+            shopItemTypes.Add(ItemType.Fish);         // 생선
         }
 
         // 플레이어 컴포넌트 자동 찾기
@@ -78,7 +78,7 @@ public class SellingUIManager : MonoBehaviour
 #if ENABLE_INPUT_SYSTEM
         go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
 #else
-    go.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+        go.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 #endif
     }
 
@@ -312,6 +312,13 @@ public class SellingUIManager : MonoBehaviour
         if (AudioManager.instance != null) AudioManager.instance.PlayCoinSound();
 
         Debug.Log($"{item.itemName} {count}개 판매 완료! +{totalPrice} Gold");
+
+        // ★ 튜토리얼에 '상점 판매 완료' 알리기
+        var ui = FindObjectOfType<HaenyeoUIManager>();
+        if (ui != null)
+        {
+            ui.NotifySoldInShop();
+        }
 
         RefreshSlots(); // 상태 새로고침
     }

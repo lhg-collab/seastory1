@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement; // ★ 씬 이름 체크용
+//using UnityEngine.SceneManager; // 씬 이름 체크용 (지금은 사용 X, 필요 없으면 using 지워도 됨)
 using UnityEngine.Rendering;
 using Unity.VisualScripting;
 
@@ -39,48 +39,53 @@ public class HaenyeoUIManager : MonoBehaviour
     bool tutorialCompleted = false; // 튜토리얼 완료 여부
     bool hasCollected = false; // 채집 완료했는지
 
+    // ★ 바다 도착 플래그
+    bool reachedSea = false;
+
+    // ★ 마지막 단계 유지 시간 & 코루틴 핸들
+    [Header("튜토리얼 마무리 설정")]
+    [Tooltip("마지막 단계 텍스트를 유지할 시간(초)")]
+    public float lastStepHoldSeconds = 2f;
+    Coroutine _lastStepRoutine;
+
     string[] tutorialSteps =
     {
          "WASD로 이동하세요",
          "마우스를 움직여 시점을 변경하세요",
          "Space로 점프하세요",
          "E 또는 마우스 좌클릭으로 채집하세요",
-         "바다로 들어가 탐험하세요.",
-         "튜토리얼 완료!",
+         "상점에 채집한 해산물을 판매하세요.",
+         "바다로 이동하세요.",
+         "앞에 보이는 테왁에 다가가 E 또는 마우스 좌클릭으로 꾹 누르고 있으면 마을로 귀환!",
+         "튜토리얼 완료! 자유롭게 돌아다니며 플레이하세요."
     };
 
-    // === 여기부터: H_UnderWater에서 동작 막기 ===
-    [Header("=== 씬 제한 ===")]
-    [Tooltip("해당 씬에서는 이 스크립트를 자동 비활성화합니다.")]
-    public string disableOnSceneName = "H_UnderWater";
+    // ====== ★ 씬이 바뀌어도 유지되는 static 튜토리얼 상태 ======
+    static bool s_initialized = false;
+    static int s_savedStep = 0;
+    static bool s_savedCompleted = false;
+    // 필요하면 hasCollected / reachedSea 도 static 으로 빼줄 수 있음 (지금은 단계/완료만 공유)
 
     void Awake()
     {
-        // 현재 씬이 지정된 이름이면, UI를 잠깐 정리하고 자신을 비활성화
-        var current = SceneManager.GetActiveScene().name;
-        if (!string.IsNullOrEmpty(disableOnSceneName) &&
-            string.Equals(current, disableOnSceneName, System.StringComparison.OrdinalIgnoreCase))
-        {
-            // 튜토리얼 관련 UI만 안전하게 꺼두기
-            if (skipProgressBar) { skipProgressBar.fillAmount = 0f; skipProgressBar.gameObject.SetActive(false); }
-            if (tutorialPanel) tutorialPanel.SetActive(false);
-            if (tutorialDescription) { tutorialDescription.text = ""; tutorialDescription.gameObject.SetActive(false); }
-            if (tutorialCompletePanel) tutorialCompletePanel.SetActive(false);
-
-            Debug.Log($"[HaenyeoUIManager] Disabled in scene '{current}'.");
-            enabled = false; // ★ 이후 Start/Update 모두 실행 안 함
-            return;
-        }
-
         // SettingsManager 자동 찾기
         if (!settingsManager)
             settingsManager = FindObjectOfType<SettingsManager>();
     }
-    // === 여기까지 ===
 
     void Start()
     {
-        tutorialCompleted = false;
+        // 처음 한 번만 기본값 설정
+        if (!s_initialized)
+        {
+            s_initialized = true;
+            s_savedStep = 0;
+            s_savedCompleted = false;
+        }
+
+        // static 상태 → 인스턴스 상태로 복사
+        tutorialStep = s_savedStep;
+        tutorialCompleted = s_savedCompleted;
 
         Debug.Log(" === 인벤토리 디벅 시작 ===");
         if (inventoryPanel != null)
@@ -107,7 +112,21 @@ public class HaenyeoUIManager : MonoBehaviour
             skipProgressBar.gameObject.SetActive(false);
         }
 
-        ShowTutorialStep(0);
+        // 이미 튜토리얼 끝난 상태라면 UI만 정리하고 종료
+        if (tutorialCompleted)
+        {
+            if (tutorialPanel) tutorialPanel.SetActive(false);
+            if (tutorialDescription)
+            {
+                tutorialDescription.text = "";
+                tutorialDescription.gameObject.SetActive(false);
+            }
+            if (tutorialCompletePanel) tutorialCompletePanel.SetActive(false);
+            return;
+        }
+
+        // 진행 중이면 현재 단계의 텍스트를 다시 표시
+        ShowTutorialStep(tutorialStep);
     }
 
     void Update()
@@ -124,9 +143,6 @@ public class HaenyeoUIManager : MonoBehaviour
         // 일시정지 중이면 게임 로직 실행 안 함
         if (settingsManager != null && settingsManager.IsPaused())
             return;
-
-        // 매 프레임 숨 감소 등을 넣었다면 여기서 처리
-        //DecreaseBreath(...);
     }
 
     // 튜토리얼 자동 진행 체크
@@ -156,18 +172,28 @@ public class HaenyeoUIManager : MonoBehaviour
                     NextTutorialStep();
                 break;
 
-            case 4: // "바다에 뛰어 드세요"
-                if (Input.GetKeyDown(KeyCode.LeftControl))
+            case 4: // "상점에 채집한 해산물을 판매하세요."
+                // ★ 더 이상 키 입력으로 넘기지 않음.
+                //    실제로 상점에서 판매가 완료되면 NotifySoldInShop()을 호출해서 진행.
+                break;
+
+            case 5: // "바다로 이동하세요."
+                // ★ 키 입력 대신, H_Water에서 NotifyReachedSea() 호출 → 플래그로 진행
+                if (reachedSea)
+                {
+                    reachedSea = false;   // 한 번만 사용
+                    NextTutorialStep();
+                }
+                break;
+
+            case 6: // "앞에 보이는 테왁에 다가가 E 또는 마우스 좌클릭으로 꾹 누르고 있으면 마을로 귀환!"
+                if (Input.GetKeyDown(KeyCode.Mouse0) || Input.GetKeyDown(KeyCode.E))
                     NextTutorialStep();
                 break;
 
-            case 5: // "튜토리얼 완료!"
-                if (hasCollected)
-                {
-                    Debug.Log("채집 완료! 다음 단계로");
-                    NextTutorialStep();
-                    hasCollected = false; // 리셋
-                }
+            case 7: // "튜토리얼 완료! 자유롭게 돌아다니며 플레이하세요."
+                // ★ 마지막 단계: 여기서는 아무 것도 안 함.
+                // ShowTutorialStep(7) 에서 2초 뒤 자동으로 EndTutorial() 이 호출됨.
                 break;
         }
     }
@@ -219,6 +245,7 @@ public class HaenyeoUIManager : MonoBehaviour
         }
 
         tutorialStep = step;
+        s_savedStep = tutorialStep; // ★ static 상태도 같이 갱신
 
         if (tutorialDescription != null)
         {
@@ -229,6 +256,33 @@ public class HaenyeoUIManager : MonoBehaviour
 
         if (tutorialPanel != null && !tutorialPanel.activeSelf)
             tutorialPanel.SetActive(true);
+
+        // ★ 마지막 단계라면, 2초 유지 후 자동으로 튜토리얼 종료
+        if (tutorialStep == 7)
+        {
+            // 혹시 이전에 돌고 있던 코루틴이 있다면 정지
+            if (_lastStepRoutine != null)
+            {
+                StopCoroutine(_lastStepRoutine);
+                _lastStepRoutine = null;
+            }
+            _lastStepRoutine = StartCoroutine(CoEndTutorialAfterDelay(lastStepHoldSeconds));
+        }
+    }
+
+    // ★ 마지막 단계 유지 후 종료 코루틴
+    IEnumerator CoEndTutorialAfterDelay(float delay)
+    {
+        float t = 0f;
+        while (t < delay && !tutorialCompleted)
+        {
+            t += Time.unscaledDeltaTime;  // 타임스케일 무시하고 실시간 기준
+            yield return null;
+        }
+        _lastStepRoutine = null;
+
+        if (!tutorialCompleted) // 중간에 스킵 등으로 이미 끝났으면 다시 EndTutorial() 안 부름
+            EndTutorial();
     }
 
     public void NextTutorialStep() => ShowTutorialStep(tutorialStep + 1);
@@ -244,6 +298,7 @@ public class HaenyeoUIManager : MonoBehaviour
     void EndTutorial()
     {
         tutorialCompleted = true;
+        s_savedCompleted = true; // ★ static 완료 상태 저장
 
         // 스킵바 숨김/초기화
         if (skipProgressBar)
@@ -271,7 +326,6 @@ public class HaenyeoUIManager : MonoBehaviour
         Debug.Log("튜토리얼 완료");
     }
 
-    // 클래스 메서드로 분리(로컬 함수 대신) — 유니티 버전 상관없이 안전
     IEnumerator HideCompletePanelAfterDelay()
     {
         // Time.timeScale 0이어도 동작하도록 실시간 대기
@@ -290,6 +344,26 @@ public class HaenyeoUIManager : MonoBehaviour
         {
             hasCollected = true;
             Debug.Log("채집 감지됨!");
+        }
+    }
+
+    // ★ 상점에서 판매 완료됐을 때 호출할 함수
+    public void NotifySoldInShop()
+    {
+        if (tutorialCompleted) return;
+
+        Debug.Log("튜토리얼: 상점 판매 감지!");
+        // 현재 스텝이 4일 때만 다음 단계로
+        AdvanceIfStep(4);
+    }
+
+    // ★ H_Water 트리거에서 호출할 함수
+    public void NotifyReachedSea()
+    {
+        if (!tutorialCompleted && tutorialStep == 5)
+        {
+            reachedSea = true;
+            Debug.Log("튜토리얼: 바다 도착 감지!");
         }
     }
 }

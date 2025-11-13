@@ -9,8 +9,8 @@ EditorBuildSettings:
     path: Assets/J/J_Title.unity
     guid: a9cb3a9422f0b684d86dbab8a6a80024
   - enabled: 1
-    path: Assets/H_/H_ground.unity
-    guid: 984fc893471daca409d539a815d8a63e
+    path: Assets/J/J_Shop.unity
+    guid: f765fa20c2049a94ba94534fb073623f
   - enabled: 1
     path: Assets/H_/H_UnderWater.unity
     guid: bf530820ab537d7408daf77b66e2ce88
