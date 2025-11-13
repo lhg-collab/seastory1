@@ -108,7 +108,7 @@ MonoBehaviour:
   arriveDistance: 1.5
   obstacleMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4087
   avoidRayRadius: 0.3
   avoidDistance: 3
   bobAmplitude: 0.25

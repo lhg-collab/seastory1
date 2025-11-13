@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 5853688836736254416}
   - component: {fileID: 1564692529898389625}
   m_Layer: 9
-  m_Name: "\uBB3C\uACE0\uAE30 2"
+  m_Name: GAOHRI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -145,7 +145,7 @@ MonoBehaviour:
   arriveDistance: 1.5
   obstacleMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 4087
   avoidRayRadius: 0.3
   avoidDistance: 3
   bobAmplitude: 0.25

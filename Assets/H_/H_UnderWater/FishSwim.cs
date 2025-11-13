@@ -34,8 +34,46 @@ public class FishSwim : MonoBehaviour
     float _bobPhase;
     bool _forceXMinus90; // GAOHRI 여부
 
+    // ★ 씬에서 이름이 "Water"인 BoxCollider를 자동으로 찾기
+    void Awake()
+    {
+        AutoAssignSwimBounds();
+    }
+
+    // ★ swimBounds가 비어 있으면 이름이 "Water"인 BoxCollider를 찾아서 할당
+    void AutoAssignSwimBounds()
+    {
+        if (swimBounds) return;
+
+        var all = FindObjectsOfType<BoxCollider>(true);
+        foreach (var c in all)
+        {
+            if (!c) continue;
+            if (string.Equals(c.name, "Water", StringComparison.OrdinalIgnoreCase))
+            {
+                swimBounds = c;
+                Debug.Log("[FishSwim] 'Water' BoxCollider를 swimBounds로 자동 할당했습니다.", this);
+                return;
+            }
+        }
+
+        Debug.LogWarning("[FishSwim] 이름이 'Water'인 BoxCollider를 찾지 못했습니다. swimBounds를 수동으로 지정해주세요.", this);
+    }
+
     void OnEnable()
     {
+        // 혹시라도 Awake 전에 만들어졌거나, 씬 전환 후 다시 켜질 때를 대비해 한 번 더 시도
+        if (!swimBounds)
+            AutoAssignSwimBounds();
+
+        if (!swimBounds)
+        {
+            // 여전히 없으면 동작하면 안 되니 바로 리턴
+            Debug.LogError("[FishSwim] swimBounds 가 설정되지 않아 움직임을 비활성화합니다.", this);
+            enabled = false;
+            return;
+        }
+
         _speed = UnityEngine.Random.Range(minSpeed, maxSpeed);
         _bobPhase = UnityEngine.Random.value * 10f;
         PickNewTarget();
@@ -68,7 +106,8 @@ public class FishSwim : MonoBehaviour
         }
 
         // 장애물 회피(전방 예측: "갈 방향" 기준)
-        if (Physics.SphereCast(transform.position, avoidRayRadius, desiredDir, out var hit, avoidDistance, obstacleMask, QueryTriggerInteraction.Ignore))
+        if (Physics.SphereCast(transform.position, avoidRayRadius, desiredDir,
+            out var hit, avoidDistance, obstacleMask, QueryTriggerInteraction.Ignore))
         {
             Vector3 avoidDir =
                 Vector3.Reflect(desiredDir, hit.normal)
@@ -103,6 +142,8 @@ public class FishSwim : MonoBehaviour
 
     void PickNewTarget()
     {
+        if (!swimBounds) return;
+
         _targetTimer = UnityEngine.Random.Range(changeTargetTime.x, changeTargetTime.y);
         _speed = UnityEngine.Random.Range(minSpeed, maxSpeed);
 

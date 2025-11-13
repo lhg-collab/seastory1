@@ -66,63 +66,37 @@ public class InventoryManager : MonoBehaviour
             }
         }
 
-        // ★ 이전 씬에서 저장된 인벤토리가 있으면 복원
-        if (s_hasSavedData)
+        // ★ 처음 한 번만 static 초기화
+        if (!s_hasSavedData)
         {
-            RestoreFromSavedData();
+            s_savedItems.Clear();
+            s_savedGold = currentGold;
+            s_hasSavedData = true;
         }
         else
         {
-            // 처음 시작일 때는 그냥 현재 골드만 UI에 표시
-            UpdateGoldUI();
+            // 다음 씬에서는 static 값에서 골드 복원
+            currentGold = s_savedGold;
         }
+
+        UpdateGoldUI();
+        RestoreFromSavedData();  // ★ static 인벤토리를 슬롯에만 뿌려주기 (static은 건드리지 않음)
 
         Debug.Log("[InventoryManager] 초기화 완료. 채집 시 아이템이 자동으로 추가됩니다.");
     }
 
-    // ★ 이 인스턴스가 파괴될 때(씬 전환 등) 현재 상태를 static에 저장
+    // ★ 이제 OnDestroy에서 static을 다시 계산하지 않는다.
     void OnDestroy()
     {
         if (instance == this)
         {
-            SaveToStatic();
             instance = null;
         }
     }
 
-    // ★ 현재 인벤토리/골드를 static 변수에 저장
-    void SaveToStatic()
-    {
-        if (inventorySlots == null) return;
-
-        s_savedGold = currentGold;
-        s_savedItems.Clear();
-
-        foreach (var slot in inventorySlots)
-        {
-            if (slot == null) continue;
-            Item item = slot.GetItem();
-            int count = slot.GetCount();
-            if (item != null && count > 0)
-            {
-                s_savedItems.Add(new SavedItemData
-                {
-                    itemType = item.itemType,
-                    count = count
-                });
-            }
-        }
-
-        s_hasSavedData = true;
-        Debug.Log($"[InventoryManager] 인벤토리 저장 완료. 골드:{s_savedGold}, 아이템 종류:{s_savedItems.Count}");
-    }
-
-    // ★ static 에 저장된 인벤토리를 현재 씬의 슬롯에 복원
+    // ★ static 인벤토리를 현재 씬의 슬롯에 "표시"만 해주는 함수
     void RestoreFromSavedData()
     {
-        currentGold = s_savedGold;
-        UpdateGoldUI();
-
         if (s_savedItems == null || s_savedItems.Count == 0)
             return;
 
@@ -130,9 +104,51 @@ public class InventoryManager : MonoBehaviour
 
         foreach (var saved in s_savedItems)
         {
-            // 슬롯 배치는 새로 해도 되므로, 기존 AddItem 로직 재사용
-            AddItem(saved.itemType, saved.count);
+            // ★ 여기서는 static을 건드리지 않기 위해 syncStatic=false
+            AddItem(saved.itemType, saved.count, syncStatic: false);
         }
+    }
+
+    // === static 인벤토리 증감 함수들 ===
+    void StaticAdd(ItemType itemType, int count)
+    {
+        if (count <= 0) return;
+
+        int idx = s_savedItems.FindIndex(d => d.itemType == itemType);
+        if (idx >= 0)
+        {
+            var d = s_savedItems[idx];
+            d.count += count;
+            s_savedItems[idx] = d;
+        }
+        else
+        {
+            s_savedItems.Add(new SavedItemData
+            {
+                itemType = itemType,
+                count = count
+            });
+        }
+
+        // 골드는 여기서 변하지 않지만, 혹시 모를 초기화 타이밍 대비해서 유지
+        s_savedGold = currentGold;
+    }
+
+    void StaticRemove(ItemType itemType, int count)
+    {
+        if (count <= 0) return;
+
+        int idx = s_savedItems.FindIndex(d => d.itemType == itemType);
+        if (idx < 0) return;
+
+        var d = s_savedItems[idx];
+        d.count -= count;
+        if (d.count <= 0)
+            s_savedItems.RemoveAt(idx);
+        else
+            s_savedItems[idx] = d;
+
+        s_savedGold = currentGold;
     }
 
     // 골드 추가
@@ -140,6 +156,7 @@ public class InventoryManager : MonoBehaviour
     {
         currentGold += amount;
         UpdateGoldUI();
+        s_savedGold = currentGold;  // ★ 골드도 static 동기화
         Debug.Log($"골드 획득! 현재 골드: {currentGold}");
     }
 
@@ -154,7 +171,8 @@ public class InventoryManager : MonoBehaviour
     }
 
     // 아이템 추가 (채집 시 호출됨)
-    public bool AddItem(ItemType itemType, int count = 1)
+    // ★ syncStatic: true면 static 인벤토리도 갱신, false면 UI슬롯에만 표시
+    public bool AddItem(ItemType itemType, int count = 1, bool syncStatic = true)
     {
         Item newItem = CreateItem(itemType);
         if (newItem == null)
@@ -206,37 +224,14 @@ public class InventoryManager : MonoBehaviour
         {
             Debug.Log($"[InventoryManager] {newItem.itemName} {added}개 추가 완료!");
 
-            // ★ static 데이터도 바로 갱신(씬이 안 바뀌어도 항상 최신 상태 유지)
-            SyncStaticFromCurrent();
+            // ★ 실제로 추가된 수량만 static 인벤토리에 반영
+            if (syncStatic)
+                StaticAdd(itemType, added);
+
             return true;
         }
 
         return false;
-    }
-
-    // ★ 현재 슬롯 상태를 static 저장 데이터와 동기화
-    void SyncStaticFromCurrent()
-    {
-        if (inventorySlots == null) return;
-
-        s_savedItems.Clear();
-        foreach (var slot in inventorySlots)
-        {
-            if (slot == null) continue;
-            Item item = slot.GetItem();
-            int count = slot.GetCount();
-            if (item != null && count > 0)
-            {
-                s_savedItems.Add(new SavedItemData
-                {
-                    itemType = item.itemType,
-                    count = count
-                });
-            }
-        }
-
-        s_savedGold = currentGold;
-        s_hasSavedData = true;
     }
 
     // 아이템 생성 (타입 기준)
@@ -262,7 +257,7 @@ public class InventoryManager : MonoBehaviour
         }
     }
 
-    // 판매용 아이템 제거 (지금은 주로 SellingUIManager 쪽에서 직접 RemoveItem/Gold 처리 중)
+    // 판매용 아이템 제거
     public bool RemoveItem(InventorySlot slot, int count)
     {
         if (slot.GetItem() == null || slot.GetCount() < count)
@@ -280,8 +275,8 @@ public class InventoryManager : MonoBehaviour
 
         Debug.Log($"{item.itemName} {count}개 판매 완료 (+{totalPrice} Gold)");
 
-        // ★ 제거 후에도 static 동기화
-        SyncStaticFromCurrent();
+        // ★ static 인벤토리에서도 해당 타입 수량 감소
+        StaticRemove(item.itemType, count);
         return true;
     }
 
