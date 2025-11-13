@@ -915,6 +915,16 @@ MonoBehaviour:
   selfRoot: {fileID: 0}
   ignoreSelf: 1
   offsetFromCamera: 1
+  gatherAnim: {fileID: 0}
+  despawnAtPercent: 0.9
+  blockInputWhileGathering: 1
+  pauseWASDWhileGathering: 1
+  fallbackResetAxes: 1
+  hardFreezePositionWhileGathering: 1
+  alsoFreezeRotation: 0
+  extraMovementComponents: []
+  autoDetectTypeNames:
+  - SwimController
 --- !u!114 &7949951098403996674
 MonoBehaviour:
   m_ObjectHideFlags: 0
