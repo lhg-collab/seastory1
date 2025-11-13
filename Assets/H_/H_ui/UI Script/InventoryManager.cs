@@ -13,11 +13,12 @@ public class InventoryManager : MonoBehaviour
     public Sprite abaloneIcon;
     public Sprite snailIcon;
     public Sprite seaCucumberIcon;
-    public Sprite octopusIcon;
+    public Sprite fishIcon;
 
     [Header("재화 설정")]
     public int currentGold = 0;
     public Text goldTextUI;
+    public Text goldTextUI2;
 
     [Header("디버그 지급(테스트용)")]
     public bool enableDebugHotkeys = true;   // 체크하면 단축키 동작
@@ -70,6 +71,9 @@ public class InventoryManager : MonoBehaviour
     {
         if (goldTextUI != null)
             goldTextUI.text = $"{currentGold:N0} Gold";
+
+        if (goldTextUI2 != null)
+            goldTextUI2.text = $"{currentGold:N0} Gold";
     }
 
     // 아이템 추가 (채집 시 호출됨)
@@ -136,8 +140,8 @@ public class InventoryManager : MonoBehaviour
             case ItemType.SeaCucumber:
                 return new Item("해삼", seaCucumberIcon, ItemType.SeaCucumber, 70);
 
-            case ItemType.Octopus:
-                return new Item("문어", octopusIcon, ItemType.Octopus, 150); 
+            case ItemType.Fish:
+                return new Item("생선", fishIcon, ItemType.Fish, 150); 
 
             default:
                 Debug.LogError($"알 수 없는 아이템 타입: {type}");
@@ -176,6 +180,6 @@ public class InventoryManager : MonoBehaviour
             AddItem(ItemType.SeaCucumber, debugAddCount);
 
         if (Input.GetKeyDown(KeyCode.Alpha4))
-            AddItem(ItemType.Octopus, debugAddCount);
+            AddItem(ItemType.Fish, debugAddCount);
     }
 }

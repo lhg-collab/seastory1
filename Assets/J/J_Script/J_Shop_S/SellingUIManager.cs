@@ -50,7 +50,7 @@ public class SellingUIManager : MonoBehaviour
             shopItemTypes.Add(ItemType.Abalone);      // 전복
             shopItemTypes.Add(ItemType.Snail);        // 소라
             shopItemTypes.Add(ItemType.SeaCucumber);  // 해삼
-            shopItemTypes.Add(ItemType.Octopus);      // 문어
+            shopItemTypes.Add(ItemType.Fish);      // 생선
         }
 
         // 플레이어 컴포넌트 자동 찾기
@@ -59,18 +59,27 @@ public class SellingUIManager : MonoBehaviour
         if (!cinLook) cinLook = FindObjectOfType<CinemachineInputProvider>(true);
     }
 
-    // 🔹 EventSystem 보장
     void EnsureEventSystem()
     {
-        if (!EventSystem.current)
+        // 씬(비활성 포함)에 있는 EventSystem 전부 조사
+        var all = FindObjectsOfType<UnityEngine.EventSystems.EventSystem>(true);
+        if (all != null && all.Length > 0)
         {
-            var es = new GameObject("EventSystem", typeof(EventSystem));
-#if ENABLE_INPUT_SYSTEM
-            es.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
-#else
-            es.AddComponent<StandaloneInputModule>();
-#endif
+            // 하나라도 활성이라면 새로 만들 필요 없음
+            foreach (var es in all) if (es.isActiveAndEnabled) return;
+
+            // 전부 비활성이면 첫 번째를 켜서 사용
+            all[0].gameObject.SetActive(true);
+            return;
         }
+
+        // 여기까지 오면 정말로 하나도 없을 때만 생성
+        var go = new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem));
+#if ENABLE_INPUT_SYSTEM
+        go.AddComponent<UnityEngine.InputSystem.UI.InputSystemUIInputModule>();
+#else
+    go.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
+#endif
     }
 
     // 🔹 Canvas/Raycaster/CanvasGroup 보정
@@ -273,7 +282,7 @@ public class SellingUIManager : MonoBehaviour
             case ItemType.Abalone: return new Item("전복", inv.abaloneIcon, ItemType.Abalone, 100);
             case ItemType.Snail: return new Item("소라", inv.snailIcon, ItemType.Snail, 50);
             case ItemType.SeaCucumber: return new Item("해삼", inv.seaCucumberIcon, ItemType.SeaCucumber, 70);
-            case ItemType.Octopus: return new Item("문어", inv.octopusIcon, ItemType.Octopus, 150);
+            case ItemType.Fish: return new Item("생선", inv.fishIcon, ItemType.Fish, 150);
             default: return null;
         }
     }
