@@ -137,17 +137,27 @@ public class SettingsManager : MonoBehaviour
             EnsurePanelClickable(settingsPanel, bringToFront: true);
 
             soundSettingsPanel?.SetActive(false);
+
+            // 🔸 추가: 카메라/플레이어 입력 OFF
+            PauseGameplayInput(true);
+
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+
             Debug.Log("[Settings] Open");
         }
         else
         {
+            // 🔸 추가: 카메라/플레이어 입력 ON
+            PauseGameplayInput(false);
+
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+
             Debug.Log("[Settings] Close");
         }
     }
+
 
     public void ResumeGame()
     {
@@ -157,6 +167,8 @@ public class SettingsManager : MonoBehaviour
         isPaused = false;
         settingsPanel?.SetActive(false);
         Time.timeScale = 1;
+
+        PauseGameplayInput(false);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -513,4 +525,44 @@ public class SettingsManager : MonoBehaviour
             Debug.Log($" - {h.gameObject.name} (sortingOrder={h.sortingOrder}) path={GetPath(h.gameObject.transform)}");
     }
 #endif
+    // === 게임플레이 입력 일괄 On/Off ===
+    void PauseGameplayInput(bool paused)
+    {
+        // 1) 새 Input System: PlayerInput
+#if ENABLE_INPUT_SYSTEM
+        var pi = FindObjectOfType<UnityEngine.InputSystem.PlayerInput>();
+        if (pi)
+        {
+            // 액션맵이 있다면 UI로 전환(없으면 컴포넌트 자체 비활성)
+            var uiMap = pi.actions?.FindActionMap("UI", throwIfNotFound: false);
+            var gameMap = pi.actions?.FindActionMap("Player", throwIfNotFound: false) ??
+                          pi.actions?.FindActionMap("Gameplay", throwIfNotFound: false);
+
+            if (uiMap != null && gameMap != null)
+            {
+                if (paused) pi.SwitchCurrentActionMap("UI");
+                else pi.SwitchCurrentActionMap(gameMap.name);
+            }
+            else
+            {
+                pi.enabled = !paused;
+            }
+        }
+#endif
+
+        // 2) Starter Assets 컴포넌트(룩 입력 차단)
+        /*var sai = FindObjectOfType<StarterAssets.StarterAssetsInputs>();
+        if (sai) sai.cursorInputForLook = !paused;
+
+        var tpc = FindObjectOfType<StarterAssets.ThirdPersonController>();
+        if (tpc) tpc.enabled = !paused;*/
+
+        // 3) Cinemachine 입력 차단 (패키지 유무와 상관없이 안전하게 비활성)
+        foreach (var b in Resources.FindObjectsOfTypeAll<Behaviour>())
+        {
+            if (b && b.GetType().Name == "CinemachineInputProvider")
+                b.enabled = !paused;
+        }
+    }
+
 }
