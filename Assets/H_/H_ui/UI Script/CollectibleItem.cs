@@ -52,7 +52,7 @@ public class CollectibleItem : MonoBehaviour
             case "전복": return ItemType.Abalone;
             case "소라": return ItemType.Snail;
             case "해삼": return ItemType.SeaCucumber;
-            case "문어": return ItemType.Octopus;
+            case "생선": return ItemType.Fish;
             default:
                 Debug.LogWarning($"알 수 없는 아이템 이름: {name}");
                 return ItemType.Abalone; // 기본값

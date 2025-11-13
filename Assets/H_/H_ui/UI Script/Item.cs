@@ -30,5 +30,5 @@ public enum ItemType
     Abalone,      // 전복
     Snail,        // 소라
     SeaCucumber,  // 해삼
-    Octopus       // 문어
+    Fish       // 물고기들
 }

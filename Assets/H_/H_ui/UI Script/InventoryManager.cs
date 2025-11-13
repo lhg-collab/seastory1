@@ -13,11 +13,16 @@ public class InventoryManager : MonoBehaviour
     public Sprite abaloneIcon;
     public Sprite snailIcon;
     public Sprite seaCucumberIcon;
-    public Sprite octopusIcon;
+    public Sprite fishIcon;
 
     [Header("재화 설정")]
     public int currentGold = 0;
     public Text goldTextUI;
+    public Text goldTextUI2;
+
+    [Header("디버그 지급(테스트용)")]
+    public bool enableDebugHotkeys = true;   // 체크하면 단축키 동작
+    public int debugAddCount = 1;            // 한 번 누를 때 추가 개수(기본 1)
 
     private void Awake()
     {
@@ -66,6 +71,9 @@ public class InventoryManager : MonoBehaviour
     {
         if (goldTextUI != null)
             goldTextUI.text = $"{currentGold:N0} Gold";
+
+        if (goldTextUI2 != null)
+            goldTextUI2.text = $"{currentGold:N0} Gold";
     }
 
     // 아이템 추가 (채집 시 호출됨)
@@ -132,8 +140,8 @@ public class InventoryManager : MonoBehaviour
             case ItemType.SeaCucumber:
                 return new Item("해삼", seaCucumberIcon, ItemType.SeaCucumber, 70);
 
-            case ItemType.Octopus:
-                return new Item("문어", octopusIcon, ItemType.Octopus, 150); 
+            case ItemType.Fish:
+                return new Item("생선", fishIcon, ItemType.Fish, 150); 
 
             default:
                 Debug.LogError($"알 수 없는 아이템 타입: {type}");
@@ -156,5 +164,22 @@ public class InventoryManager : MonoBehaviour
 
         Debug.Log($"{slot.GetItem()?.itemName ?? "아이템"} {count}개 판매 완료 (+{totalPrice} Gold)");
         return true;
+    }
+    void Update()
+    {
+        if (!enableDebugHotkeys) return;
+
+        // 1: 전복, 2: 소라, 3: 해삼, 4: 문어
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+            AddItem(ItemType.Abalone, debugAddCount);
+
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+            AddItem(ItemType.Snail, debugAddCount);
+
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+            AddItem(ItemType.SeaCucumber, debugAddCount);
+
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+            AddItem(ItemType.Fish, debugAddCount);
     }
 }
