@@ -48,9 +48,12 @@ public class HaenyeoUIManager : MonoBehaviour
     public float lastStepHoldSeconds = 2f;
     Coroutine _lastStepRoutine;
 
+    // ★ 1초 후 다음 스텝 이동용 플래그
+    bool isWaitingNextStep = false;
+
     string[] tutorialSteps =
     {
-         "WASD로 이동하세요",
+         "WASD로 이동 SHIFT로 달리기",
          "마우스를 움직여 시점을 변경하세요",
          "Space로 점프하세요",
          "E 또는 마우스 좌클릭으로 채집하세요",
@@ -150,26 +153,26 @@ public class HaenyeoUIManager : MonoBehaviour
     {
         switch (tutorialStep)
         {
-            case 0: // "WASD로 이동하세요"
+            case 0: // "WASD로 이동 shift로 달리기"
                 if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.A) ||
                     Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.D))
-                    NextTutorialStep();
+                    NextTutorialStepDelayed(1f);
                 break;
 
             case 1: // "마우스를 움직여 시점을 변경하세요"
                 if (Mathf.Abs(Input.GetAxis("Mouse X")) > 0.1f ||
                     Mathf.Abs(Input.GetAxis("Mouse Y")) > 0.1f)
-                    NextTutorialStep();
+                    NextTutorialStepDelayed(1f);
                 break;
 
             case 2: // "Space로 점프하세요"
                 if (Input.GetKeyDown(KeyCode.Space))
-                    NextTutorialStep();
+                    NextTutorialStepDelayed(1f);
                 break;
 
             case 3: // "E 또는 마우스 좌클릭으로 채집하세요"
                 if (Input.GetKeyDown(KeyCode.Mouse0) || Input.GetKeyDown(KeyCode.E))
-                    NextTutorialStep();
+                    NextTutorialStepDelayed(1f);
                 break;
 
             case 4: // "상점에 채집한 해산물을 판매하세요."
@@ -182,13 +185,13 @@ public class HaenyeoUIManager : MonoBehaviour
                 if (reachedSea)
                 {
                     reachedSea = false;   // 한 번만 사용
-                    NextTutorialStep();
+                    NextTutorialStepDelayed(1f);
                 }
                 break;
 
             case 6: // "앞에 보이는 테왁에 다가가 E 또는 마우스 좌클릭으로 꾹 누르고 있으면 마을로 귀환!"
                 if (Input.GetKeyDown(KeyCode.Mouse0) || Input.GetKeyDown(KeyCode.E))
-                    NextTutorialStep();
+                    NextTutorialStepDelayed(1f);
                 break;
 
             case 7: // "튜토리얼 완료! 자유롭게 돌아다니며 플레이하세요."
@@ -285,6 +288,33 @@ public class HaenyeoUIManager : MonoBehaviour
             EndTutorial();
     }
 
+    // ★ 1초 후 다음 스텝으로 넘어가는 코루틴
+    public void NextTutorialStepDelayed(float delay = 1f)
+    {
+        if (isWaitingNextStep || tutorialCompleted)
+            return;
+
+        StartCoroutine(CoNextTutorialStepAfterDelay(delay));
+    }
+
+    IEnumerator CoNextTutorialStepAfterDelay(float delay)
+    {
+        isWaitingNextStep = true;
+
+        float t = 0f;
+        while (t < delay && !tutorialCompleted)
+        {
+            t += Time.unscaledDeltaTime; // 실시간 기준으로 대기
+            yield return null;
+        }
+
+        isWaitingNextStep = false;
+
+        if (!tutorialCompleted)
+            NextTutorialStep();
+    }
+
+    // 즉시 다음 스텝으로 넘기는 함수 (외부에서 호출 가능)
     public void NextTutorialStep() => ShowTutorialStep(tutorialStep + 1);
 
     public void AdvanceIfStep(int step)
@@ -353,8 +383,9 @@ public class HaenyeoUIManager : MonoBehaviour
         if (tutorialCompleted) return;
 
         Debug.Log("튜토리얼: 상점 판매 감지!");
-        // 현재 스텝이 4일 때만 다음 단계로
-        AdvanceIfStep(4);
+        // 현재 스텝이 4일 때만 1초 후 다음 단계로
+        if (tutorialStep == 4)
+            NextTutorialStepDelayed(1f);
     }
 
     // ★ H_Water 트리거에서 호출할 함수

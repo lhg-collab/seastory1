@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 2100000, guid: 4e154bf235e41704bbd6bbc6fd6c63f6, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -3019,57 +3019,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 693748587}
   m_CullTransparentMesh: 1
---- !u!21 &699413403
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Universal Render Pipeline/Unlit
-  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AlphaClip: 0
-    - _AlphaToMask: 0
-    - _Blend: 0
-    - _BlendOp: 0
-    - _Cull: 2
-    - _Cutoff: 0.5
-    - _DstBlend: 0
-    - _DstBlendAlpha: 0
-    - _QueueOffset: 0
-    - _SampleGI: 0
-    - _SrcBlend: 1
-    - _SrcBlendAlpha: 1
-    - _Surface: 0
-    - _ZWrite: 1
-    m_Colors:
-    - _BaseColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
-    - _Color: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
-  m_BuildTextureStacks: []
 --- !u!1 &706384404
 GameObject:
   m_ObjectHideFlags: 0
@@ -4973,10 +4922,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   waterSurface: {fileID: 0}
-  waterHeight: 35
+  waterHeight: 30
   underwaterFogColor: {r: 0, g: 0.3, b: 0.4, a: 1}
   underwaterFogDensity: 0.06
-  underwaterSkybox: {fileID: 2100000, guid: edcfc5aaa4ab59e4cb087049354cfae3, type: 2}
+  underwaterSkybox: {fileID: 2100000, guid: 119ec07f1c7ed204db46bd8465fd5a50, type: 2}
 --- !u!1 &975450781
 GameObject:
   m_ObjectHideFlags: 0
@@ -5156,8 +5105,8 @@ Transform:
   m_GameObject: {fileID: 981034826}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 216, y: 20, z: 255}
-  m_LocalScale: {x: 500, y: 30, z: 500}
+  m_LocalPosition: {x: 216, y: 13.4, z: 255}
+  m_LocalScale: {x: 500, y: 35, z: 500}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -5174,6 +5123,57 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 917fe3642636ea04a9edb3e4bfb6c50d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!21 &1022581122
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Universal Render Pipeline/Unlit
+  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 0
+    - _AlphaToMask: 0
+    - _Blend: 0
+    - _BlendOp: 0
+    - _Cull: 2
+    - _Cutoff: 0.5
+    - _DstBlend: 0
+    - _DstBlendAlpha: 0
+    - _QueueOffset: 0
+    - _SampleGI: 0
+    - _SrcBlend: 1
+    - _SrcBlendAlpha: 1
+    - _Surface: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _BaseColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
+    - _Color: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
+  m_BuildTextureStacks: []
 --- !u!1 &1039160139
 GameObject:
   m_ObjectHideFlags: 0
@@ -6307,7 +6307,6 @@ MonoBehaviour:
   gatherablePrefabs:
   - {fileID: 8400671583134071501, guid: 58c2bdb788e48124bb04ca76fc1814de, type: 3}
   - {fileID: 9094264562371965180, guid: b73a8f0b4d38a2a419b5ba432ca9420f, type: 3}
-  - {fileID: 3104395098475807133, guid: c3bfd8a8dafeff64ca9ebd8fd536fbb4, type: 3}
   - {fileID: 4695138491706337250, guid: cafef1b27b172594dbbe1de7913dd791, type: 3}
   - {fileID: 7290117976900526958, guid: 11eb60530591a2044ad86b8924ef4790, type: 3}
   - {fileID: 48833823268814732, guid: 219aab3c0ee656241bc1a439c25accd0, type: 3}
@@ -9321,57 +9320,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1824753175}
   m_CullTransparentMesh: 1
---- !u!21 &1829778621
-Material:
-  serializedVersion: 8
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Universal Render Pipeline/Unlit
-  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
-  m_Parent: {fileID: 0}
-  m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
-  m_LightmapFlags: 4
-  m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
-  disabledShaderPasses: []
-  m_LockedProperties: 
-  m_SavedProperties:
-    serializedVersion: 3
-    m_TexEnvs:
-    - _BaseMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    - _MainTex:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
-    m_Ints: []
-    m_Floats:
-    - _AlphaClip: 0
-    - _AlphaToMask: 0
-    - _Blend: 0
-    - _BlendOp: 0
-    - _Cull: 2
-    - _Cutoff: 0.5
-    - _DstBlend: 0
-    - _DstBlendAlpha: 0
-    - _QueueOffset: 0
-    - _SampleGI: 0
-    - _SrcBlend: 1
-    - _SrcBlendAlpha: 1
-    - _Surface: 0
-    - _ZWrite: 1
-    m_Colors:
-    - _BaseColor: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
-    - _Color: {r: 0.9, g: 0.9, b: 0.9, a: 0.95}
-  m_BuildTextureStacks: []
 --- !u!1 &1860627069
 GameObject:
   m_ObjectHideFlags: 0
@@ -10145,7 +10093,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 273692972681132905, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 36.855
+      value: 32.445
       objectReference: {fileID: 0}
     - target: {fileID: 400632617792978841, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
       propertyPath: portalPrefab
@@ -10157,11 +10105,11 @@ PrefabInstance:
       objectReference: {fileID: 1860627070}
     - target: {fileID: 1160237394158163782, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 35.48
+      value: 31.07
       objectReference: {fileID: 0}
     - target: {fileID: 2507653689430117629, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 36.855
+      value: 32.445
       objectReference: {fileID: 0}
     - target: {fileID: 2780287185800164299, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
       propertyPath: healthFill
@@ -10219,13 +10167,25 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3581719679547488478, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4828501463175465652, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 1829778621}
+      objectReference: {fileID: 1022581122}
+    - target: {fileID: 7549610356342360281, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7676948847017072837, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
       propertyPath: drainPerSecond
-      value: 3
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7676948847017072837, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
+      propertyPath: regenPerSecond
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 7676948847017072837, guid: 0d5868c6f6734b24e8d1e26f03999e0e, type: 3}
       propertyPath: drowningDamagePerSecond
